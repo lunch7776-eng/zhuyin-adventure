@@ -546,6 +546,57 @@
   .robot-svg-wrap { justify-self: center; transform-origin: center bottom; }
   .robot-svg-wrap.happy { animation: robotHop 0.5s ease-out; }
   .robot-svg-wrap.sad { animation: robotSad 0.5s ease-out; }
+  /* 新版 PNG sprite avatar */
+  .robot-avatar {
+    position: relative;
+    width: 130px;
+    height: 160px;
+  }
+  .robot-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    user-select: none;
+    pointer-events: none;
+  }
+  .robot-svg-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .robot-accessories {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .robot-accessories .acc-halo {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    filter: drop-shadow(0 0 6px rgba(255, 220, 80, 0.7));
+  }
+  .robot-accessories .acc-cape {
+    position: absolute;
+    bottom: 20%;
+    left: -14px;
+    font-size: 30px;
+    transform: rotate(-15deg);
+  }
+  .robot-accessories .acc-crown {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-14px); }
@@ -1122,32 +1173,70 @@ function getRobotAccessoryLevel() {
   if (stage1Done) return 1;
   return 0;
 }
+// 主視覺 PNG 路徑（生成的 Pixar 風 BOBO）
+const ROBOT_IDLE_SRC = "assets/robot-bobo.png";
+// 各 mood 動畫的幀數（PNG 切好放在 assets/sprite/{name}/01.png ~ NN.png）
+const ROBOT_SPRITE_FRAMES = { happy: 6 /*, sad: 4, collect: 6 — 待加 */ };
+
 function renderRobotSvg(moodClass = "") {
   const acc = getRobotAccessoryLevel();
   return `
-    <div id="robotAvatar" class="robot-svg-wrap ${moodClass}">
-      <svg width="130" height="160" viewBox="0 0 130 160" aria-label="BOBO 機器人">
-        ${acc >= 1 ? `<ellipse cx="65" cy="24" rx="34" ry="7" fill="#f9d65c" opacity="0.9"/>` : ""}
-        ${acc >= 2 ? `<path d="M44 102 L24 138 L54 124 L76 138 L58 102 Z" fill="#e74c3c" opacity="0.85"/>` : ""}
-        <line x1="65" y1="12" x2="65" y2="24" stroke="#f39c12" stroke-width="4"/>
-        <circle cx="65" cy="10" r="6" fill="#f39c12"/>
-        <rect x="30" y="24" width="70" height="56" rx="22" fill="#5dade2"/>
-        <circle cx="52" cy="50" r="10" fill="#111"/>
-        <circle cx="78" cy="50" r="10" fill="#111"/>
-        <circle cx="55" cy="47" r="3" fill="#fff"/>
-        <circle cx="81" cy="47" r="3" fill="#fff"/>
-        <path d="M48 64 Q65 76 82 64" fill="none" stroke="#233" stroke-width="4" stroke-linecap="round"/>
-        <rect x="36" y="84" width="58" height="50" rx="12" fill="#4ecdc4"/>
-        <rect x="46" y="94" width="38" height="20" rx="6" fill="#2c3e50"/>
-        <text x="65" y="109" text-anchor="middle" font-size="14" fill="#f1c40f">⚡</text>
-        <rect x="18" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
-        <rect x="96" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
-        <rect x="50" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
-        <rect x="70" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
-        ${acc >= 3 ? `<text x="65" y="28" text-anchor="middle" font-size="18">👑</text><circle cx="20" cy="40" r="2" fill="#ffe082"/><circle cx="110" cy="54" r="2" fill="#ffe082"/><circle cx="16" cy="92" r="2" fill="#ffe082"/><circle cx="112" cy="110" r="2" fill="#ffe082"/>` : ""}
-      </svg>
+    <div id="robotAvatar" class="robot-svg-wrap robot-avatar ${moodClass}">
+      <img id="robotImg" class="robot-img" src="${ROBOT_IDLE_SRC}" alt="BOBO 機器人"
+           onerror="document.getElementById('robotImg').style.display='none';var s=document.getElementById('robotSvgFallback');if(s)s.style.display='block';">
+      <div id="robotSvgFallback" class="robot-svg-fallback" style="display:none">
+        <svg width="130" height="160" viewBox="0 0 130 160" aria-label="BOBO 機器人 (備援)">
+          <line x1="65" y1="12" x2="65" y2="24" stroke="#f39c12" stroke-width="4"/>
+          <circle cx="65" cy="10" r="6" fill="#f39c12"/>
+          <rect x="30" y="24" width="70" height="56" rx="22" fill="#5dade2"/>
+          <circle cx="52" cy="50" r="10" fill="#111"/>
+          <circle cx="78" cy="50" r="10" fill="#111"/>
+          <circle cx="55" cy="47" r="3" fill="#fff"/>
+          <circle cx="81" cy="47" r="3" fill="#fff"/>
+          <path d="M48 64 Q65 76 82 64" fill="none" stroke="#233" stroke-width="4" stroke-linecap="round"/>
+          <rect x="36" y="84" width="58" height="50" rx="12" fill="#4ecdc4"/>
+          <rect x="46" y="94" width="38" height="20" rx="6" fill="#2c3e50"/>
+          <text x="65" y="109" text-anchor="middle" font-size="14" fill="#f1c40f">⚡</text>
+          <rect x="18" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
+          <rect x="96" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
+          <rect x="50" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
+          <rect x="70" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
+        </svg>
+      </div>
+      <div class="robot-accessories" aria-hidden="true">
+        ${acc >= 1 ? `<div class="acc-halo">😇</div>` : ""}
+        ${acc >= 2 ? `<div class="acc-cape">🦸</div>` : ""}
+        ${acc >= 3 ? `<div class="acc-crown">👑</div>` : ""}
+      </div>
     </div>
   `;
+}
+
+// 播放 sprite 動畫；播完自動回 idle 主視覺
+let _robotAnimTimer = null;
+function playRobotAnim(name, frameMs = 110) {
+  const img = document.getElementById("robotImg");
+  if (!img || img.style.display === "none") return false; // PNG 不可用，讓 caller fallback
+  const count = ROBOT_SPRITE_FRAMES[name];
+  if (!count) return false;
+
+  if (_robotAnimTimer) { clearInterval(_robotAnimTimer); _robotAnimTimer = null; }
+  const frames = Array.from({ length: count }, (_, i) =>
+    `assets/sprite/${name}/${String(i + 1).padStart(2, "0")}.png`
+  );
+  let i = 0;
+  img.src = frames[0];
+  _robotAnimTimer = setInterval(() => {
+    i++;
+    if (i >= frames.length) {
+      clearInterval(_robotAnimTimer);
+      _robotAnimTimer = null;
+      img.src = ROBOT_IDLE_SRC; // 回 idle
+      return;
+    }
+    img.src = frames[i];
+  }, frameMs);
+  return true;
 }
 
 function startRobotAdventure() {
@@ -1205,6 +1294,9 @@ function nextRobotRound() {
 }
 
 function animateRobotMood(kind) {
+  // 優先用 sprite 動畫（PNG 幀切換）
+  if (playRobotAnim(kind)) return;
+  // 沒對應 sprite 就退回 CSS class 動畫（縮放/搖晃）
   const wrap = document.getElementById("robotAvatar");
   if (!wrap) return;
   wrap.classList.remove("happy", "sad");
