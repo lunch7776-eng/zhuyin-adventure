@@ -434,6 +434,176 @@
   .alphabet-entry .ae-emoji { font-size: 48px; line-height: 1; }
   .alphabet-entry .ae-title { font-size: 22px; font-weight: 900; }
   .alphabet-entry .ae-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
+  .robot-entry {
+    background: linear-gradient(135deg, #9b59b6, #6c5ce7);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 20px 24px;
+    margin: 0 10px 16px;
+    width: calc(100% - 20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #5a3eb9;
+    text-align: left;
+  }
+  .robot-entry:active { transform: translateY(3px); box-shadow: 0 3px 0 #5a3eb9; }
+  .robot-entry .re-emoji { font-size: 48px; line-height: 1; }
+  .robot-entry .re-title { font-size: 24px; font-weight: 900; }
+  .robot-entry .re-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
+  .robot-entry .re-progress {
+    margin-top: 8px;
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .robot-entry .re-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffe082, #ffca28);
+  }
+
+  /* BOBO 機器人玩法 */
+  .robot-stage-title {
+    width: 100%;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: #5a3eb9;
+    background: white;
+    border-radius: 20px;
+    padding: 14px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+  }
+  .robot-target-card {
+    width: 100%;
+    background: white;
+    border-radius: 20px;
+    padding: 14px 20px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .robot-target { font-size: 40px; font-weight: 900; color: #d35400; }
+  .robot-field {
+    width: 100%;
+    min-height: 240px;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .robot-choice {
+    position: absolute;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 4px solid #d9d2ff;
+    background: #f6f3ff;
+    color: #5a3eb9;
+    font-size: 44px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    animation: bob 2.2s ease-in-out infinite;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
+  }
+  .robot-choice:active { transform: scale(0.95); }
+  .robot-choice.wrong { background: #ffd7d7; border-color: #e74c3c; animation: shake 0.5s; }
+  .robot-choice.collecting {
+    background: #b8f5b8;
+    border-color: #2ecc71;
+    transform: translateY(220px) scale(0.2);
+    opacity: 0.2;
+    transition: transform 0.7s ease, opacity 0.7s ease;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  .robot-footer {
+    width: 100%;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    padding: 12px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    align-items: center;
+    gap: 12px;
+  }
+  .robot-svg-wrap { justify-self: center; transform-origin: center bottom; }
+  .robot-svg-wrap.happy { animation: robotHop 0.5s ease-out; }
+  .robot-svg-wrap.sad { animation: robotSad 0.5s ease-out; }
+  @keyframes robotHop {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  @keyframes robotSad {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
+  }
+  .battery {
+    position: relative;
+    height: 34px;
+    border: 4px solid #7f8c8d;
+    border-radius: 10px;
+    background: #ecf0f1;
+    overflow: hidden;
+  }
+  .battery::before {
+    content: "";
+    position: absolute;
+    left: -14px;
+    top: 9px;
+    width: 10px;
+    height: 12px;
+    background: #7f8c8d;
+    border-radius: 3px 0 0 3px;
+  }
+  .battery-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8be28a, #2ecc71);
+    transition: width 0.4s;
+  }
+  .battery-label {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #555;
+  }
+  .robot-collected {
+    width: 100%;
+    background: #777;
+    border-radius: 16px;
+    color: white;
+    padding: 10px 12px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-align: left;
+    min-height: 56px;
+  }
+  .robot-collected .label {
+    font-size: 14px;
+    letter-spacing: 0;
+    opacity: 0.9;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .robot-flair { font-size: 38px; margin-bottom: 8px; animation: floatUp 1.4s ease-out; }
 
   /* 注音字典頁 */
   .alphabet-page h1 {
@@ -509,6 +679,16 @@
     .zh-cell.combined .zc-zhuyin { font-size: 19px; }
     .alphabet-entry .ae-emoji { font-size: 36px; }
     .alphabet-entry .ae-title { font-size: 18px; }
+    .robot-entry .re-emoji { font-size: 36px; }
+    .robot-entry .re-title { font-size: 20px; }
+    .robot-choice {
+      width: 68px;
+      height: 68px;
+      font-size: 34px;
+    }
+    .robot-footer { grid-template-columns: 110px 1fr; }
+    .robot-svg-wrap svg { width: 100px; height: 124px; }
+    .robot-collected { font-size: 18px; }
   }
 </style>
 </head>
@@ -530,8 +710,22 @@ let state = loadState();
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY));
-    return s || { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } };
-  } catch { return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } }; }
+    const base = s || {};
+    return {
+      totalStars: base.totalStars || 0,
+      levels: { 1: 0, 2: 0, 3: 0, ...(base.levels || {}) },
+      robot: {
+        stage: (base.robot && base.robot.stage) || "initials",
+        collected: {
+          initials: ((base.robot && base.robot.collected && base.robot.collected.initials) || []).filter(Boolean),
+          finals: ((base.robot && base.robot.collected && base.robot.collected.finals) || []).filter(Boolean),
+          combined: ((base.robot && base.robot.collected && base.robot.collected.combined) || []).filter(Boolean),
+        }
+      }
+    };
+  } catch {
+    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] } } };
+  }
 }
 function saveState() {
   localStorage.setItem(STATE_KEY, JSON.stringify(state));
@@ -892,9 +1086,183 @@ const LEVELS = [
     target: 5,
   },
 ];
+const ROBOT_STAGE_ORDER = ["initials", "finals", "combined"];
+const ROBOT_STAGE_META = {
+  initials: { title: "Stage 1：收集聲符", list: () => ZHUYIN_TABLE.initials },
+  finals: { title: "Stage 2：收集韻符", list: () => ZHUYIN_TABLE.finals },
+  combined: { title: "Stage 3：收集結合韻", list: () => ZHUYIN_TABLE.combined },
+};
+
+let robotRoundState = null;
+
+function getRobotStageSet(stage) {
+  return ROBOT_STAGE_META[stage].list().map(i => i.z);
+}
+function getRobotSpeakText(stage, z) {
+  const item = ROBOT_STAGE_META[stage].list().find(x => x.z === z);
+  return item ? `${z}，${item.ex}` : z;
+}
+function getRobotCurrentStageProgress() {
+  const stage = state.robot.stage;
+  const total = getRobotStageSet(stage).length;
+  const done = state.robot.collected[stage].length;
+  return { stage, done, total };
+}
+function getRobotStageLabel(stage) {
+  if (stage === "initials") return "聲符";
+  if (stage === "finals") return "韻符";
+  return "結合韻";
+}
+function getRobotAccessoryLevel() {
+  const stage1Done = state.robot.collected.initials.length === getRobotStageSet("initials").length;
+  const stage2Done = state.robot.collected.finals.length === getRobotStageSet("finals").length;
+  const stage3Done = state.robot.collected.combined.length === getRobotStageSet("combined").length;
+  if (stage3Done) return 3;
+  if (stage2Done) return 2;
+  if (stage1Done) return 1;
+  return 0;
+}
+function renderRobotSvg(moodClass = "") {
+  const acc = getRobotAccessoryLevel();
+  return `
+    <div id="robotAvatar" class="robot-svg-wrap ${moodClass}">
+      <svg width="130" height="160" viewBox="0 0 130 160" aria-label="BOBO 機器人">
+        ${acc >= 1 ? `<ellipse cx="65" cy="24" rx="34" ry="7" fill="#f9d65c" opacity="0.9"/>` : ""}
+        ${acc >= 2 ? `<path d="M44 102 L24 138 L54 124 L76 138 L58 102 Z" fill="#e74c3c" opacity="0.85"/>` : ""}
+        <line x1="65" y1="12" x2="65" y2="24" stroke="#f39c12" stroke-width="4"/>
+        <circle cx="65" cy="10" r="6" fill="#f39c12"/>
+        <rect x="30" y="24" width="70" height="56" rx="22" fill="#5dade2"/>
+        <circle cx="52" cy="50" r="10" fill="#111"/>
+        <circle cx="78" cy="50" r="10" fill="#111"/>
+        <circle cx="55" cy="47" r="3" fill="#fff"/>
+        <circle cx="81" cy="47" r="3" fill="#fff"/>
+        <path d="M48 64 Q65 76 82 64" fill="none" stroke="#233" stroke-width="4" stroke-linecap="round"/>
+        <rect x="36" y="84" width="58" height="50" rx="12" fill="#4ecdc4"/>
+        <rect x="46" y="94" width="38" height="20" rx="6" fill="#2c3e50"/>
+        <text x="65" y="109" text-anchor="middle" font-size="14" fill="#f1c40f">⚡</text>
+        <rect x="18" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
+        <rect x="96" y="94" width="16" height="8" rx="4" fill="#4ecdc4"/>
+        <rect x="50" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
+        <rect x="70" y="136" width="10" height="18" rx="4" fill="#7f8c8d"/>
+        ${acc >= 3 ? `<text x="65" y="28" text-anchor="middle" font-size="18">👑</text><circle cx="20" cy="40" r="2" fill="#ffe082"/><circle cx="110" cy="54" r="2" fill="#ffe082"/><circle cx="16" cy="92" r="2" fill="#ffe082"/><circle cx="112" cy="110" r="2" fill="#ffe082"/>` : ""}
+      </svg>
+    </div>
+  `;
+}
+
+function startRobotAdventure() {
+  nextRobotRound();
+}
+
+function nextRobotRound() {
+  const stage = state.robot.stage;
+  const stageSet = getRobotStageSet(stage);
+  const collected = state.robot.collected[stage];
+  if (collected.length >= stageSet.length) {
+    showRobotStageComplete();
+    return;
+  }
+  const remaining = stageSet.filter(z => !collected.includes(z));
+  const target = remaining[Math.floor(Math.random() * remaining.length)];
+  const distractors = shuffle(stageSet.filter(z => z !== target)).slice(0, 4);
+  const choices = shuffle([target, ...distractors]);
+  robotRoundState = { stage, target, locked: false };
+
+  const app = document.getElementById("app");
+  const fill = Math.round((collected.length / stageSet.length) * 100);
+  const pattern = stageSet.map(z => (collected.includes(z) ? z : "□")).join(" ");
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${state.totalStars}</div>
+      </div>
+    </div>
+    <div class="robot-stage-title">${ROBOT_STAGE_META[stage].title} ${collected.length} / ${stageSet.length}</div>
+    <div class="robot-target-card">
+        <div style="font-size:20px;font-weight:800;color:#666">現在要找 → <span class="robot-target">${target}</span></div>
+      <button class="speak-btn" style="font-size:20px;padding:10px 20px;margin:0" onclick="speak('${getRobotSpeakText(stage, target)}', 0.7)">🔊 再聽一次</button>
+    </div>
+    <div class="robot-field">
+      ${choices.map((z, i) => `
+        <button class="robot-choice" style="left:${8 + (i % 3) * 30}%;top:${12 + Math.floor(i / 3) * 40}%;animation-delay:${i * 0.16}s"
+          onclick="pickRobotChoice(this,'${z}')">${z}</button>
+      `).join("")}
+    </div>
+    <div class="robot-footer">
+      ${renderRobotSvg()}
+      <div>
+        <div class="battery"><div class="battery-fill" style="width:${fill}%"></div></div>
+        <div class="battery-label">⚡ ${collected.length}/${stageSet.length}</div>
+      </div>
+    </div>
+    <div class="robot-collected">
+      <span class="label">已收集：</span>${pattern}
+    </div>
+  `;
+  setTimeout(() => speak(getRobotSpeakText(stage, target), 0.7), 400);
+}
+
+function animateRobotMood(kind) {
+  const wrap = document.getElementById("robotAvatar");
+  if (!wrap) return;
+  wrap.classList.remove("happy", "sad");
+  void wrap.offsetWidth;
+  wrap.classList.add(kind);
+  setTimeout(() => wrap.classList.remove(kind), 550);
+}
+
+function pickRobotChoice(el, picked) {
+  if (!robotRoundState || robotRoundState.locked) return;
+  const target = robotRoundState.target;
+  if (picked === target) {
+    robotRoundState.locked = true;
+    el.classList.add("collecting");
+    animateRobotMood("happy");
+    if (!state.robot.collected[robotRoundState.stage].includes(target)) {
+      state.robot.collected[robotRoundState.stage].push(target);
+    }
+    saveState();
+    speak(`好棒！${target}`, 0.7);
+    setTimeout(nextRobotRound, 800);
+  } else {
+    el.classList.add("wrong");
+    animateRobotMood("sad");
+    speak(`再聽一次：${getRobotSpeakText(robotRoundState.stage, target)}`, 0.7);
+    setTimeout(() => el.classList.remove("wrong"), 500);
+  }
+}
+
+function showRobotStageComplete() {
+  celebrateBurst();
+  const stage = state.robot.stage;
+  const idx = ROBOT_STAGE_ORDER.indexOf(stage);
+  const nextStage = ROBOT_STAGE_ORDER[idx + 1] || null;
+  const flair = stage === "initials" ? "😇" : stage === "finals" ? "🦸" : "👑✨";
+  if (nextStage) state.robot.stage = nextStage;
+  saveState();
+  speak("太厲害了！過關了！");
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="robot-flair">${flair}</div>
+      ${renderRobotSvg("happy")}
+      <h2>${getRobotStageLabel(stage)}收集完成！</h2>
+      <p>${nextStage ? "BOBO 升級成功，準備前往下一階段！" : "全部收集完成，BOBO 變成最強機器人！"}</p>
+      ${nextStage ? `<button onclick="this.closest('.modal').remove();nextRobotRound()">下一階段</button>` : `<button onclick="this.closest('.modal').remove();renderHome()">回首頁</button>`}
+      <button class="secondary" onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
 
 function renderHome() {
   const app = document.getElementById("app");
+  const rp = getRobotCurrentStageProgress();
+  const percent = Math.round((rp.done / rp.total) * 100);
   app.innerHTML = `
     <div class="topbar">
       <div class="stars">⭐ ${state.totalStars}</div>
@@ -906,6 +1274,15 @@ function renderHome() {
     <div class="home">
       <h1>🌈 注音大冒險 🌈</h1>
       <div class="subtitle">點下面的關卡開始玩 · 每關 5-10 分鐘</div>
+
+      <button class="robot-entry" onclick="startRobotAdventure()">
+        <div class="re-emoji">🤖</div>
+        <div style="flex:1">
+          <div class="re-title">BOBO 機器人冒險</div>
+          <div class="re-desc">目前在收集：${getRobotStageLabel(rp.stage)} (${rp.done} / ${rp.total})</div>
+          <div class="re-progress"><div class="re-progress-fill" style="width:${percent}%"></div></div>
+        </div>
+      </button>
 
       <button class="alphabet-entry" onclick="renderAlphabet()">
         <div class="ae-emoji">📖</div>
@@ -947,7 +1324,7 @@ function renderHome() {
 
 function resetProgress() {
   if (confirm("確定要重來嗎？所有星星會歸零")) {
-    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } };
+    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] } } };
     saveState();
     renderHome();
   }
@@ -1394,6 +1771,8 @@ window.selectVoice = selectVoice;
 window.tryVoice = tryVoice;
 window.renderAlphabet = renderAlphabet;
 window.playZhuyinCell = playZhuyinCell;
+window.startRobotAdventure = startRobotAdventure;
+window.pickRobotChoice = pickRobotChoice;
 renderHome();
 </script>
 </body>
