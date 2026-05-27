@@ -5,19 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>注音大冒險 — ㄅㄆㄇ 闖關</title>
 <style>
+  :root {
+    --bg-main: #faf7f2;
+    --text-main: #1a1f2e;
+    --text-sub: #586077;
+    --surface: #fffdf9;
+    --surface-2: #f7f1e6;
+    --accent: #ff8c42;
+    --accent-2: #ffb066;
+    --highlight: #ffe7b5;
+    --sky-muted: #b7d4e8;
+    --green-muted: #9fc6a4;
+    --sand-muted: #d8c596;
+    --shadow-soft: 0 18px 40px rgba(26, 31, 46, 0.12), 0 3px 8px rgba(26, 31, 46, 0.08);
+    --shadow-pop: 0 28px 60px rgba(21, 26, 36, 0.22), 0 8px 20px rgba(21, 26, 36, 0.12);
+    --line-soft: rgba(255, 255, 255, 0.68);
+    --radius-xl: 34px;
+    --radius-lg: 24px;
+    --radius-md: 18px;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%;
-    font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-    background: linear-gradient(135deg, #ffe9c4 0%, #ffd6e7 50%, #c4f0ff 100%);
-    color: #2b2b2b;
+    font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 12% 12%, rgba(255, 176, 102, 0.22) 0%, transparent 34%),
+      radial-gradient(circle at 80% 0%, rgba(183, 212, 232, 0.42) 0%, transparent 42%),
+      linear-gradient(160deg, #fefcf8 0%, var(--bg-main) 40%, #f3eee4 100%);
+    color: var(--text-main);
     overflow-x: hidden;
     user-select: none;
   }
   #app {
-    max-width: 900px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 24px 20px 28px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -31,69 +53,78 @@
     margin-bottom: 16px;
   }
   .topbar .stars {
-    font-size: 28px;
-    background: white;
-    padding: 8px 16px;
+    font-size: 22px;
+    font-weight: 800;
+    background: rgba(255,255,255,0.72);
+    padding: 10px 16px;
     border-radius: 999px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+    border: 1px solid var(--line-soft);
+    box-shadow: var(--shadow-soft);
   }
   .topbar button {
-    background: white;
+    background: rgba(255,255,255,0.86);
     border: none;
-    padding: 10px 18px;
+    padding: 11px 18px;
     border-radius: 999px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
+    letter-spacing: .02em;
     cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
-    color: #555;
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: var(--shadow-soft);
+    color: var(--text-main);
+    transition: all .28s ease;
   }
-  .topbar button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .topbar button:active { transform: translateY(2px) scale(.98); }
 
   /* 首頁：闖關地圖 */
   .home h1 {
-    font-size: 42px;
+    font-size: clamp(38px, 6vw, 64px);
     text-align: center;
-    margin: 30px 0 10px;
-    color: #d35400;
-    text-shadow: 3px 3px 0 white;
+    margin: 20px 0 10px;
+    color: #111725;
+    letter-spacing: .06em;
+    font-weight: 900;
   }
   .home .subtitle {
     text-align: center;
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 30px;
+    font-size: 16px;
+    color: var(--text-sub);
+    margin-bottom: 22px;
+    letter-spacing: .04em;
   }
   .level-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    gap: 18px;
     padding: 10px;
   }
   .level-card {
-    background: white;
-    border-radius: 24px;
+    background: linear-gradient(165deg, rgba(255,255,255,0.94) 0%, rgba(249,243,233,0.94) 100%);
+    border-radius: var(--radius-lg);
     padding: 24px;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
-    transition: transform 0.1s;
-    border: 4px solid transparent;
+    box-shadow: var(--shadow-soft);
+    transition: transform .28s ease, box-shadow .28s ease;
+    border: 1px solid rgba(255,255,255,0.8);
   }
-  .level-card:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .level-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop); }
+  .level-card:active { transform: translateY(2px) scale(.98); }
   .level-card .badge {
     display: inline-block;
-    background: #fff3cd;
-    color: #d35400;
-    padding: 4px 12px;
+    background: color-mix(in srgb, var(--accent) 18%, white);
+    color: #9a4d18;
+    padding: 6px 14px;
     border-radius: 999px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     margin-bottom: 10px;
+    letter-spacing: .03em;
   }
   .level-card .emoji { font-size: 56px; line-height: 1; }
-  .level-card h3 { font-size: 22px; margin-top: 8px; color: #333; }
-  .level-card p { font-size: 14px; color: #777; margin-top: 6px; line-height: 1.4; }
+  .level-card h3 { font-size: 24px; margin-top: 10px; color: #20283b; letter-spacing: .03em; }
+  .level-card p { font-size: 14px; color: #61708e; margin-top: 8px; line-height: 1.5; }
   .level-card .progress-stars {
     margin-top: 12px;
     font-size: 22px;
@@ -120,18 +151,20 @@
     padding: 20px;
   }
   .question-card {
-    background: white;
-    border-radius: 32px;
+    background: linear-gradient(165deg, rgba(255,255,255,.92), rgba(246,240,230,.92));
+    border: 1px solid rgba(255,255,255,.85);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
     padding: 30px;
     margin-bottom: 24px;
-    box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-soft);
     width: 100%;
     max-width: 600px;
   }
   .big-zhuyin {
     font-size: 120px;
     font-weight: 900;
-    color: #d35400;
+    color: #222b3f;
     line-height: 1;
     margin: 10px 0;
   }
@@ -142,22 +175,22 @@
   }
   .hint {
     font-size: 18px;
-    color: #555;
+    color: #5d6b84;
     margin: 10px 0;
   }
   .speak-btn {
-    background: #fbc531;
+    background: linear-gradient(165deg, var(--accent-2), var(--accent));
     border: none;
     padding: 18px 36px;
     border-radius: 999px;
     font-size: 24px;
     font-weight: 800;
-    color: white;
+    color: #fffdf8;
     cursor: pointer;
-    box-shadow: 0 6px 0 #d4a017;
+    box-shadow: 0 12px 24px rgba(255, 140, 66, 0.36), inset 0 -2px 0 rgba(140, 67, 17, 0.2);
     margin: 10px 0;
   }
-  .speak-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #d4a017; }
+  .speak-btn:active { transform: translateY(2px) scale(.98); }
 
   .choices {
     display: grid;
@@ -167,24 +200,25 @@
     max-width: 600px;
   }
   .choice {
-    background: white;
-    border: 4px solid #e0e0e0;
-    border-radius: 24px;
+    background: linear-gradient(170deg, rgba(255,255,255,.95), rgba(248,241,229,.95));
+    border: 1px solid rgba(255,255,255,.75);
+    border-radius: var(--radius-lg);
     padding: 24px 16px;
     font-size: 56px;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
-    color: #333;
-    transition: transform 0.1s;
+    box-shadow: var(--shadow-soft);
+    color: #1f293d;
+    transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
     min-height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .choice:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
-  .choice.correct { background: #b8f5b8; border-color: #2ecc71; animation: pop 0.4s; }
-  .choice.wrong { background: #ffcccb; border-color: #e74c3c; animation: shake 0.4s; }
+  .choice:hover { transform: translateY(-2px); box-shadow: var(--shadow-pop); }
+  .choice:active { transform: translateY(2px) scale(.98); }
+  .choice.correct { background: #ecf7e9; border-color: #7eb27f; animation: pop 0.4s; }
+  .choice.wrong { background: #fceae7; border-color: #d96d59; animation: shake 0.4s; }
   @keyframes pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.15); }
@@ -200,26 +234,33 @@
   .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(26, 31, 46, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
   }
   .modal-content {
-    background: white;
-    border-radius: 32px;
+    background: linear-gradient(165deg, rgba(255,255,255,.95), rgba(246,240,230,.93));
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255,255,255,.74);
+    backdrop-filter: blur(10px);
     padding: 40px;
     text-align: center;
     max-width: 400px;
-    animation: pop 0.5s;
+    animation: popupSpring .45s cubic-bezier(.2,.86,.22,1.1);
+    box-shadow: var(--shadow-pop);
+  }
+  @keyframes popupSpring {
+    0% { transform: translateY(16px) scale(.88); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
   }
   .modal-content .big-emoji { font-size: 100px; }
-  .modal-content h2 { font-size: 32px; color: #d35400; margin: 16px 0; }
-  .modal-content p { font-size: 18px; color: #666; margin-bottom: 20px; }
+  .modal-content h2 { font-size: 32px; color: #1f2940; margin: 16px 0; letter-spacing: .03em; }
+  .modal-content p { font-size: 18px; color: #5d6b84; margin-bottom: 20px; }
   .modal-content button {
-    background: #2ecc71;
-    color: white;
+    background: linear-gradient(165deg, var(--accent-2), var(--accent));
+    color: #fffdf8;
     border: none;
     padding: 14px 28px;
     border-radius: 999px;
@@ -227,10 +268,10 @@
     font-weight: 800;
     cursor: pointer;
     margin: 4px;
-    box-shadow: 0 4px 0 #27ae60;
+    box-shadow: 0 12px 22px rgba(255, 140, 66, .35);
   }
-  .modal-content button:active { transform: translateY(2px); box-shadow: 0 2px 0 #27ae60; }
-  .modal-content button.secondary { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
+  .modal-content button:active { transform: translateY(2px) scale(.98); }
+  .modal-content button.secondary { background: #ece8de; color: #414b62; box-shadow: none; }
 
   /* 設定面板 */
   .settings-modal .modal-content { max-width: 460px; text-align: left; }
@@ -260,9 +301,9 @@
     box-shadow: 0 4px 0 rgba(0,0,0,0.08);
   }
   .gender-toggle button.active {
-    border-color: #2ecc71;
-    background: #d4f5d4;
-    color: #1f7a3f;
+    border-color: rgba(255,140,66,.55);
+    background: color-mix(in srgb, var(--accent) 16%, white);
+    color: #8d4619;
   }
   .gender-toggle button .em { font-size: 36px; display: block; margin-bottom: 4px; }
 
@@ -306,16 +347,16 @@
     font-size: 14px;
   }
   .gear-btn {
-    background: white;
+    background: rgba(255,255,255,.88);
     border: none;
     padding: 10px 14px;
     border-radius: 999px;
     font-size: 22px;
     cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-soft);
     margin-left: 8px;
   }
-  .gear-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .gear-btn:active { transform: translateY(2px) scale(.98); }
   .topbar .right-group { display: flex; align-items: center; gap: 8px; }
 
   /* 進度條 */
@@ -323,7 +364,7 @@
     width: 100%;
     max-width: 600px;
     height: 14px;
-    background: white;
+    background: rgba(255,255,255,.75);
     border-radius: 999px;
     overflow: hidden;
     margin-bottom: 20px;
@@ -331,7 +372,7 @@
   }
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    background: linear-gradient(90deg, #ffd79d, #ff9f55);
     border-radius: 999px;
     transition: width 0.3s;
   }
@@ -347,18 +388,18 @@
   .slot {
     width: 80px;
     height: 100px;
-    background: #f5f5f5;
-    border: 4px dashed #ccc;
+    background: #f8f2e7;
+    border: 2px dashed #d7c9ad;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 42px;
     font-weight: 900;
-    color: #d35400;
+    color: #5c6f93;
   }
-  .slot.filled { background: white; border-style: solid; border-color: #2ecc71; }
-  .slot.target { border-color: #fbc531; background: #fffae0; }
+  .slot.filled { background: white; border-style: solid; border-color: #8ab48d; }
+  .slot.target { border-color: #f0c47d; background: #fff5df; }
   .pool {
     display: flex;
     justify-content: center;
@@ -367,18 +408,18 @@
     margin-top: 20px;
   }
   .pool-item {
-    background: #fbc531;
-    color: white;
+    background: linear-gradient(165deg, #ffe3b7, #ffbc73);
+    color: #51331f;
     border: none;
     width: 70px;
     height: 70px;
-    border-radius: 50%;
+    border-radius: 24px;
     font-size: 32px;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 4px 0 #d4a017;
+    box-shadow: var(--shadow-soft);
   }
-  .pool-item:active { transform: translateY(2px); box-shadow: 0 2px 0 #d4a017; }
+  .pool-item:active { transform: translateY(2px) scale(.98); }
   .pool-item:disabled { opacity: 0.3; cursor: not-allowed; }
 
   /* 飄星星動畫 */
@@ -396,16 +437,16 @@
 
   /* 家長提示 */
   .parent-note {
-    background: rgba(255,255,255,0.7);
-    border-left: 6px solid #3498db;
+    background: rgba(255,255,255,0.66);
+    border-left: 6px solid #94b4cf;
     padding: 14px;
     border-radius: 12px;
     font-size: 14px;
-    color: #555;
+    color: #5d677e;
     margin: 16px 0;
     text-align: left;
   }
-  .parent-note strong { color: #2980b9; }
+  .parent-note strong { color: #3f6585; }
 
   @media (max-width: 600px) {
     .big-zhuyin { font-size: 90px; }
@@ -416,8 +457,8 @@
 
   /* 注音字典入口（首頁大按鈕）*/
   .alphabet-entry {
-    background: linear-gradient(135deg, #ffa07a, #ff7f50);
-    color: white;
+    background: linear-gradient(160deg, rgba(255,255,255,.88), rgba(249,241,228,.9));
+    color: var(--text-main);
     border: none;
     border-radius: 24px;
     padding: 20px 24px;
@@ -427,16 +468,17 @@
     align-items: center;
     gap: 16px;
     cursor: pointer;
-    box-shadow: 0 6px 0 #d35400;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255,255,255,0.84);
     text-align: left;
   }
-  .alphabet-entry:active { transform: translateY(3px); box-shadow: 0 3px 0 #d35400; }
+  .alphabet-entry:active { transform: translateY(2px) scale(.98); }
   .alphabet-entry .ae-emoji { font-size: 48px; line-height: 1; }
   .alphabet-entry .ae-title { font-size: 22px; font-weight: 900; }
   .alphabet-entry .ae-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
   .robot-entry {
-    background: linear-gradient(135deg, #9b59b6, #6c5ce7);
-    color: white;
+    background: linear-gradient(145deg, #fffdfa 0%, #f6eee0 100%);
+    color: var(--text-main);
     border: none;
     border-radius: 24px;
     padding: 20px 24px;
@@ -446,24 +488,24 @@
     align-items: center;
     gap: 16px;
     cursor: pointer;
-    box-shadow: 0 6px 0 #5a3eb9;
+    box-shadow: var(--shadow-pop);
     text-align: left;
   }
-  .robot-entry:active { transform: translateY(3px); box-shadow: 0 3px 0 #5a3eb9; }
+  .robot-entry:active { transform: translateY(2px) scale(.98); }
   .robot-entry .re-emoji { font-size: 48px; line-height: 1; }
-  .robot-entry .re-title { font-size: 24px; font-weight: 900; }
-  .robot-entry .re-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
+  .robot-entry .re-title { font-size: 26px; font-weight: 900; letter-spacing: .03em; }
+  .robot-entry .re-desc { font-size: 14px; color: #5e6b85; margin-top: 4px; }
   .robot-entry .re-progress {
     margin-top: 8px;
     width: 100%;
     height: 10px;
-    background: rgba(255,255,255,0.3);
+    background: rgba(29, 38, 59, 0.08);
     border-radius: 999px;
     overflow: hidden;
   }
   .robot-entry .re-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ffe082, #ffca28);
+    background: linear-gradient(90deg, #ffd697, #ff9148);
   }
 
   /* BOBO 機器人玩法 */
@@ -472,19 +514,19 @@
     text-align: center;
     font-size: 28px;
     font-weight: 900;
-    color: #5a3eb9;
-    background: white;
+    color: #2a344b;
+    background: rgba(255,255,255,.8);
     border-radius: 20px;
     padding: 14px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-soft);
     margin-bottom: 12px;
   }
   .robot-target-card {
     width: 100%;
-    background: white;
+    background: rgba(255,255,255,.8);
     border-radius: 20px;
     padding: 14px 20px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-soft);
     margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
@@ -492,13 +534,13 @@
     gap: 10px;
     flex-wrap: wrap;
   }
-  .robot-target { font-size: 40px; font-weight: 900; color: #d35400; }
+  .robot-target { font-size: 42px; font-weight: 900; color: #212d44; }
   .robot-field {
     width: 100%;
     min-height: 240px;
-    background: white;
+    background: linear-gradient(165deg, #f4efe5, #f7f3ea);
     border-radius: 24px;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-soft);
     position: relative;
     overflow: hidden;
     margin-bottom: 12px;
@@ -507,22 +549,22 @@
     position: absolute;
     width: 88px;
     height: 88px;
-    border-radius: 50%;
-    border: 4px solid #d9d2ff;
-    background: #f6f3ff;
-    color: #5a3eb9;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,.74);
+    background: linear-gradient(165deg, rgba(255,255,255,.95), rgba(244,236,226,.95));
+    color: #344560;
     font-size: 44px;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    box-shadow: var(--shadow-soft);
     animation: bob 2.2s ease-in-out infinite;
     transition: transform 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
   }
   .robot-choice:active { transform: scale(0.95); }
-  .robot-choice.wrong { background: #ffd7d7; border-color: #e74c3c; animation: shake 0.5s; }
+  .robot-choice.wrong { background: #fbe9e7; border-color: #d97460; animation: shake 0.5s; }
   .robot-choice.collecting {
-    background: #b8f5b8;
-    border-color: #2ecc71;
+    background: #ecf7e9;
+    border-color: #81a87d;
     transform: translateY(220px) scale(0.2);
     opacity: 0.2;
     transition: transform 0.7s ease, opacity 0.7s ease;
@@ -533,9 +575,9 @@
   }
   .robot-footer {
     width: 100%;
-    background: white;
+    background: rgba(255,255,255,.82);
     border-radius: 24px;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-soft);
     padding: 12px;
     margin-bottom: 10px;
     display: grid;
@@ -600,21 +642,21 @@
 
   /* === 2D 探索玩法 === */
   .explore-banner {
-    background: white;
+    background: rgba(255,255,255,.78);
     border-radius: 20px;
     padding: 12px 20px;
     text-align: center;
     font-weight: 900;
     font-size: 20px;
-    color: #333;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    color: #25324a;
+    box-shadow: var(--shadow-soft);
     margin: 6px 0;
   }
-  .explore-banner .ezone-name { color: #d35400; }
-  .explore-banner .ezone-progress { color: #2ecc71; margin-left: 8px; }
+  .explore-banner .ezone-name { color: #2c3850; }
+  .explore-banner .ezone-progress { color: #a45d2b; margin-left: 8px; }
   .explore-hint {
     text-align: center;
-    color: #888;
+    color: #6c7d98;
     font-size: 13px;
     margin: 4px 0 10px;
   }
@@ -623,59 +665,78 @@
     width: 100%;
     max-width: 800px;
     height: min(60vh, 500px);
-    background: linear-gradient(135deg, #c8e6f5 0%, #b8e6c1 50%, #ffe7a0 100%);
+    background: linear-gradient(170deg, #ddeaf3 0%, #f4efe5 100%);
     border-radius: 24px;
     overflow: hidden;
     cursor: pointer;
     margin: 0 auto 12px;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-pop);
     touch-action: manipulation;
   }
-  .explore-stage.zone-initials { background: linear-gradient(135deg, #a8d8f0 0%, #c8e6f5 100%); }
-  .explore-stage.zone-finals   { background: linear-gradient(135deg, #b8e6c1 0%, #d4f5d4 100%); }
-  .explore-stage.zone-combined { background: linear-gradient(135deg, #ffe7a0 0%, #fff4d4 100%); }
-  /* 地面紋理（簡單草地點點）*/
+  .explore-stage.zone-initials {
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,.7), transparent 20%),
+      linear-gradient(180deg, #b9d7ea 0%, #d6e8f5 36%, #90be92 36%, #7cae7e 100%);
+  }
+  .explore-stage.zone-finals {
+    background:
+      radial-gradient(circle at 70% 8%, rgba(255,233,183,.25), transparent 25%),
+      linear-gradient(180deg, #a8c7b3 0%, #85ad93 44%, #668d73 44%, #537762 100%);
+  }
+  .explore-stage.zone-combined {
+    background:
+      radial-gradient(circle at 72% 14%, rgba(255,228,162,.58), transparent 24%),
+      linear-gradient(180deg, #9ec7dd 0%, #8ec0da 34%, #e8d29c 34%, #ddc28c 100%);
+  }
   .explore-stage::before {
     content: "";
     position: absolute;
     inset: 0;
-    background-image:
-      radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px),
-      radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
-    background-size: 40px 40px, 28px 28px;
-    background-position: 0 0, 14px 14px;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,.22), transparent 30%),
+      radial-gradient(circle at 25% 30%, rgba(255,255,255,.22), transparent 42%),
+      radial-gradient(circle at 70% 70%, rgba(0,0,0,.06), transparent 44%);
+    pointer-events: none;
+  }
+  .explore-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(50% 22% at 20% 42%, rgba(255,255,255,.35), transparent 100%),
+      radial-gradient(34% 14% at 76% 22%, rgba(255,255,255,.34), transparent 100%);
     pointer-events: none;
   }
 
   .explore-zhuyin {
     position: absolute;
-    width: 56px;
-    height: 56px;
-    background: white;
-    border: 4px solid #d35400;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), rgba(255,255,255,.45) 36%, rgba(255,255,255,.22) 64%, rgba(255,255,255,.18) 100%);
+    border: 1px solid rgba(255,255,255,.8);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
     font-weight: 900;
-    color: #d35400;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.15);
-    animation: bob 2.4s ease-in-out infinite;
+    color: #2b3a56;
+    box-shadow: 0 0 16px rgba(255,206,134,.4), 0 12px 18px rgba(28, 38, 56, .22), inset 0 2px 10px rgba(255,255,255,.5);
+    animation: bobGem 2.4s ease-in-out infinite;
     transform: translate(-50%, -50%);
     transition: opacity 0.5s, transform 0.5s;
     pointer-events: none;
     user-select: none;
     z-index: 2;
   }
-  .explore-zhuyin.combined { font-size: 18px; }
+  .explore-zhuyin.combined { font-size: 17px; }
   .explore-zhuyin.collected {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
   }
-  @keyframes bob {
+  @keyframes bobGem {
     0%, 100% { transform: translate(-50%, calc(-50% + 0px)); }
-    50%      { transform: translate(-50%, calc(-50% - 6px)); }
+    50%      { transform: translate(-50%, calc(-50% - 7px)) scale(1.02); }
   }
 
   .explore-robot {
@@ -683,9 +744,20 @@
     width: 80px;
     height: 100px;
     pointer-events: none;
-    transition: left 0.5s ease-out, top 0.5s ease-out;
+    transition: left 0.5s cubic-bezier(.2,.8,.2,1), top 0.5s cubic-bezier(.2,.8,.2,1);
     z-index: 5;
     transform: translate(-50%, -100%); /* anchor = feet */
+  }
+  .explore-robot::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 58px;
+    height: 16px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(22,29,40,.38) 0%, rgba(22,29,40,0) 72%);
+    filter: blur(2px);
   }
   .explore-robot .robot-img,
   .explore-robot img {
@@ -706,16 +778,18 @@
 
   .explore-popup {
     position: absolute;
-    background: white;
-    border-radius: 20px;
+    background: linear-gradient(165deg, rgba(255,255,255,.97), rgba(247,242,232,.94));
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,.8);
     padding: 16px;
-    box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-pop);
     z-index: 50;
     text-align: center;
     transform: translate(-50%, -100%);
     pointer-events: auto;
     min-width: 220px;
-    animation: popupIn 0.25s ease-out;
+    animation: popupIn 0.35s cubic-bezier(.2,.86,.22,1.08);
   }
   @keyframes popupIn {
     0%   { opacity: 0; transform: translate(-50%, -85%) scale(0.6); }
@@ -728,7 +802,7 @@
     left: 50%;
     transform: translateX(-50%);
     border: 10px solid transparent;
-    border-top-color: white;
+    border-top-color: #fffaf2;
   }
   .explore-popup.flip-down {
     transform: translate(-50%, 0);
@@ -737,55 +811,74 @@
     bottom: auto;
     top: -10px;
     border-top-color: transparent;
-    border-bottom-color: white;
+    border-bottom-color: #fffaf2;
   }
   .explore-popup .ep-zhuyin {
     font-size: 48px;
     font-weight: 900;
-    color: #d35400;
+    color: #202d45;
     line-height: 1;
     margin-bottom: 6px;
   }
   .explore-popup .ep-zhuyin.combined { font-size: 36px; }
   .explore-popup .ep-example {
     font-size: 18px;
-    color: #555;
+    color: #5d6b84;
     margin-bottom: 12px;
   }
   .explore-popup button {
-    background: #fbc531;
+    background: #efe9dd;
     border: none;
-    color: white;
+    color: #4a556f;
     padding: 10px 14px;
     border-radius: 999px;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     margin: 4px;
-    box-shadow: 0 3px 0 #d4a017;
+    box-shadow: 0 6px 16px rgba(23,30,44,.12);
   }
-  .explore-popup button:active { transform: translateY(2px); box-shadow: 0 1px 0 #d4a017; }
+  .explore-popup button:active { transform: translateY(2px) scale(.98); }
   .explore-popup .ep-collect {
-    background: #2ecc71;
-    box-shadow: 0 3px 0 #27ae60;
+    background: linear-gradient(165deg, var(--accent-2), var(--accent));
+    color: #fffdf8;
+    box-shadow: 0 12px 24px rgba(255, 140, 66, 0.35);
   }
-  .explore-popup .ep-collect:active { box-shadow: 0 1px 0 #27ae60; }
+  .explore-popup .ep-collect:active { box-shadow: 0 8px 12px rgba(255, 140, 66, 0.25); }
 
   .explore-progress-bar {
     width: 100%;
     max-width: 800px;
     margin: 0 auto 12px;
     height: 14px;
-    background: white;
+    background: rgba(255,255,255,.66);
     border-radius: 999px;
     overflow: hidden;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
   }
   .explore-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    background: linear-gradient(90deg, #ffd797, #ff9148);
     border-radius: 999px;
     transition: width 0.5s;
+  }
+  .explore-dottrack {
+    width: 100%;
+    max-width: 800px;
+    margin: 4px auto 12px;
+    display: grid;
+    grid-template-columns: repeat(21, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .explore-dot {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.42);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+  }
+  .explore-dot.active {
+    background: linear-gradient(90deg, #ffd79b, #ff8f45);
+    box-shadow: 0 0 12px rgba(255,153,85,.52);
   }
 
   @media (max-width: 600px) {
@@ -857,34 +950,35 @@
   .alphabet-page h1 {
     text-align: center;
     font-size: 32px;
-    color: #d35400;
+    color: #1d283d;
     margin: 16px 0 4px;
   }
   .alphabet-page .alphabet-subtitle {
     text-align: center;
     font-size: 15px;
-    color: #777;
+    color: #627291;
     margin-bottom: 20px;
   }
   .zhuyin-section {
-    background: white;
+    background: linear-gradient(165deg, rgba(255,255,255,.92), rgba(247,241,231,.92));
     border-radius: 20px;
     padding: 16px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255,255,255,.8);
   }
   .zhuyin-section h2 {
     font-size: 18px;
-    color: #555;
+    color: #2a344a;
     margin-bottom: 12px;
     padding: 4px 12px;
-    background: #fff3cd;
+    background: color-mix(in srgb, var(--accent) 16%, white);
     border-radius: 999px;
     display: inline-block;
   }
   .zhuyin-section .group-hint {
     font-size: 13px;
-    color: #999;
+    color: #7f8ca9;
     margin-left: 8px;
   }
   .zhuyin-grid {
@@ -893,29 +987,30 @@
     gap: 10px;
   }
   .zh-cell {
-    background: #fffbf0;
-    border: 3px solid #ffe8a0;
+    background: rgba(255,255,255,.88);
+    border: 1px solid rgba(255,255,255,.74);
     border-radius: 16px;
     padding: 10px 4px;
     text-align: center;
     cursor: pointer;
-    transition: transform 0.08s, background 0.15s;
-    box-shadow: 0 3px 0 rgba(0,0,0,0.06);
+    transition: transform .24s ease, background .24s ease, box-shadow .24s ease;
+    box-shadow: var(--shadow-soft);
     user-select: none;
   }
-  .zh-cell:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.06); background: #fff3c4; }
-  .zh-cell.playing { background: #b8f5b8; border-color: #2ecc71; }
+  .zh-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-pop); }
+  .zh-cell:active { transform: translateY(2px) scale(.98); }
+  .zh-cell.playing { background: #fff5df; border-color: #f1bf73; }
   .zh-cell .zc-zhuyin {
     font-size: 30px;
     font-weight: 900;
-    color: #d35400;
+    color: #22314c;
     line-height: 1;
     letter-spacing: 1px;
   }
   .zh-cell .zc-emoji { font-size: 24px; line-height: 1; margin: 4px 0; }
   .zh-cell .zc-example {
     font-size: 14px;
-    color: #555;
+    color: #60708f;
     font-weight: 700;
   }
   /* 結合韻的注音字較長 */
@@ -929,14 +1024,14 @@
     .alphabet-entry .ae-title { font-size: 18px; }
     .robot-entry .re-emoji { font-size: 36px; }
     .robot-entry .re-title { font-size: 20px; }
-    .robot-choice {
-      width: 68px;
-      height: 68px;
-      font-size: 34px;
-    }
+    .robot-choice { width: 68px; height: 68px; font-size: 34px; border-radius: 16px; }
     .robot-footer { grid-template-columns: 110px 1fr; }
     .robot-svg-wrap svg { width: 100px; height: 124px; }
     .robot-collected { font-size: 18px; }
+    #app { padding: 14px 10px 20px; }
+    .home .subtitle { font-size: 14px; }
+    .robot-entry .re-title { font-size: 22px; }
+    .explore-popup { min-width: 190px; padding: 14px; }
   }
 </style>
 </head>
@@ -1261,8 +1356,8 @@ function renderAlphabet() {
       </div>
     </div>
     <div class="alphabet-page">
-      <h1>📖 注音字典</h1>
-      <div class="alphabet-subtitle">點任何一個方塊聽聽看怎麼念 + 例字</div>
+      <h1>注音字典</h1>
+      <div class="alphabet-subtitle">自由探索模式 · 點任何卡片都會朗讀注音與例字</div>
 
       <div class="zhuyin-section">
         <h2>聲符</h2><span class="group-hint">${ZHUYIN_TABLE.initials.length} 個</span>
@@ -1446,6 +1541,33 @@ const EXPLORE_ZONE_META = {
   finals:   { name: "🌳 韻符森林",   cls: "zone-finals" },
   combined: { name: "🏝️ 結合韻島", cls: "zone-combined" },
 };
+function renderExploreScene(stage) {
+  if (stage === "initials") {
+    return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
+      <path d="M0 265 L120 180 L260 256 L390 172 L540 268 L700 192 L800 250 L800 500 L0 500 Z" fill="rgba(98,141,106,.55)"/>
+      <path d="M0 300 L150 230 L300 292 L455 222 L625 304 L800 268 L800 500 L0 500 Z" fill="rgba(68,118,78,.56)"/>
+      <ellipse cx="120" cy="90" rx="56" ry="20" fill="rgba(255,255,255,.68)"/>
+      <ellipse cx="245" cy="66" rx="48" ry="16" fill="rgba(255,255,255,.62)"/>
+      <ellipse cx="680" cy="84" rx="62" ry="22" fill="rgba(255,255,255,.66)"/>
+    </svg>`;
+  }
+  if (stage === "finals") {
+    return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
+      <circle cx="640" cy="72" r="68" fill="rgba(255,245,210,.2)"/>
+      <path d="M0 252 C100 220,180 310,290 264 C390 220,520 308,620 252 C708 205,770 268,800 242 L800 500 L0 500 Z" fill="rgba(74,116,86,.52)"/>
+      <path d="M0 310 C105 282,220 356,330 320 C435 286,560 358,685 302 C735 278,770 292,800 280 L800 500 L0 500 Z" fill="rgba(56,86,63,.66)"/>
+      <circle cx="180" cy="140" r="64" fill="rgba(187,223,181,.22)"/>
+      <circle cx="500" cy="120" r="56" fill="rgba(187,223,181,.16)"/>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
+    <defs><linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(255,255,255,.46)"/><stop offset="100%" stop-color="rgba(141,195,224,.34)"/></linearGradient></defs>
+    <circle cx="682" cy="78" r="46" fill="rgba(255,224,164,.58)"/>
+    <path d="M0 326 C102 290,202 368,308 334 C408 300,528 368,636 336 C710 314,760 322,800 306 L800 500 L0 500 Z" fill="rgba(220,194,141,.72)"/>
+    <path d="M0 290 C108 254,220 320,322 292 C434 258,556 328,660 290 C728 266,770 280,800 270" stroke="url(#waveGrad)" stroke-width="12" fill="none"/>
+    <path d="M0 308 C110 272,210 346,316 312 C428 278,550 346,654 308 C720 286,768 294,800 282" stroke="rgba(255,255,255,.36)" stroke-width="7" fill="none"/>
+  </svg>`;
+}
 
 let exploreState = null;
 let _exploreInteracting = false;
@@ -1528,6 +1650,7 @@ function renderExplore() {
     </div>
     <div class="explore-hint">點地圖任何位置 → BOBO 走過去 → 走到注音會自動跟你互動</div>
     <div class="explore-stage ${meta.cls}" id="exploreStage" onclick="onExploreClick(event)">
+      ${renderExploreScene(stage)}
       ${positions.map(p => `
         <div class="${zhuyinClass}" data-z="${p.z}"
              style="left:${p.x}px;top:${p.y}px"
@@ -1542,6 +1665,11 @@ function renderExplore() {
     <div class="explore-progress-bar">
       <div class="explore-progress-fill"
            style="width:${(collected.length / stageSet.length) * 100}%"></div>
+    </div>
+    <div class="explore-dottrack">
+      ${Array.from({ length: stageSet.length }).map((_, i) => `
+        <div class="explore-dot ${i < collected.length ? "active" : ""}"></div>
+      `).join("")}
     </div>
   `;
 
@@ -1665,6 +1793,9 @@ function collectExploreZhuyin(z) {
     const stageSet = getRobotStageSet(stage);
     fill.style.width = ((state.robot.collected[stage].length / stageSet.length) * 100) + "%";
   }
+  const dots = document.querySelectorAll(".explore-dottrack .explore-dot");
+  const activeCount = state.robot.collected[stage].length;
+  dots.forEach((d, i) => d.classList.toggle("active", i < activeCount));
   // 更新 banner 進度
   const prog = document.querySelector(".ezone-progress");
   if (prog) {
@@ -1803,11 +1934,11 @@ function renderHome() {
       </div>
     </div>
     <div class="home">
-      <h1>🌈 注音大冒險 🌈</h1>
-      <div class="subtitle">點下面的關卡開始玩 · 每關 5-10 分鐘</div>
+      <h1>注音大冒險</h1>
+      <div class="subtitle">BOBO 語音探索與闖關 · 小孩好上手，大人也會喜歡的質感學習</div>
 
       <button class="robot-entry" onclick="startRobotAdventure()">
-        <div class="re-emoji">🤖</div>
+        <div class="re-emoji"><img src="${ROBOT_IDLE_SRC}" alt="BOBO" style="width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(18,22,35,.22))"></div>
         <div style="flex:1">
           <div class="re-title">BOBO 機器人冒險</div>
           <div class="re-desc">目前在收集：${getRobotStageLabel(rp.stage)} (${rp.done} / ${rp.total})</div>
@@ -1816,10 +1947,10 @@ function renderHome() {
       </button>
 
       <button class="alphabet-entry" onclick="renderAlphabet()">
-        <div class="ae-emoji">📖</div>
+        <div class="ae-emoji">🔎</div>
         <div>
-          <div class="ae-title">注音字典 — 先按按看怎麼念</div>
-          <div class="ae-desc">全部 58 個注音 · 點任何一個聽發音 + 例字 · 不計分</div>
+          <div class="ae-title">注音字典</div>
+          <div class="ae-desc">58 個注音自由探索 · 點任一格聽發音與例字</div>
         </div>
       </button>
 
@@ -2159,7 +2290,7 @@ function showLevelComplete(levelId) {
   modal.className = "modal";
   modal.innerHTML = `
     <div class="modal-content">
-      <div class="big-emoji">🎉</div>
+      <div class="big-emoji">🤖✨</div>
       <h2>${lv.title} 過關！</h2>
       <p>你拿到 ${lv.target} 顆星星 ⭐</p>
       <button onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
@@ -2182,10 +2313,10 @@ function openSettings() {
   modal.className = "modal settings-modal";
   modal.innerHTML = `
     <div class="modal-content">
-      <h2>⚙️ 聲音設定</h2>
+      <h2>聲音設定</h2>
 
       <div class="settings-section">
-        <div class="label">選擇性別（年輕人音色）</div>
+        <div class="label">語音角色</div>
         <div class="gender-toggle">
           <button class="${settings.gender === 'female' ? 'active' : ''}" onclick="setGender('female')">
             <span class="em">👧</span>女生
@@ -2196,7 +2327,7 @@ function openSettings() {
         </div>
         ${(settings.gender === 'male' && !hasMaleVoice) ? `
           <div style="font-size:12px;color:#e67e22;margin-top:8px;background:#fff3e0;padding:8px;border-radius:8px;line-height:1.5">
-            ⚠️ 系統未內建男聲台灣口音，目前用「降低音調」模擬男生聲<br>
+            ⚠️ 系統未內建男聲台灣口音，目前以音調模擬男生聲<br>
             <span style="color:#999">想要真實男聲：Chrome / Edge 用 Google 雲端 voice 可能會多選項</span>
           </div>` : ''}
         ${(settings.gender === 'female' && !hasFemaleVoice) ? `
@@ -2206,11 +2337,11 @@ function openSettings() {
       </div>
 
       <div class="settings-section">
-        <div class="label">系統可用的台灣口音（${zhVoices.length} 個）</div>
+        <div class="label">可用台灣口音（${zhVoices.length}）</div>
         <div class="voice-list">
           ${zhVoices.length === 0 ? `
             <div class="voice-empty">
-              ⚠️ 找不到 zh-TW 的聲音<br>
+              ⚠️ 找不到 zh-TW 聲音<br>
               <span style="font-size:12px">建議用 Mac 內建 Safari 開啟（系統內建台灣女聲 Mei-Jia）</span>
             </div>
           ` : zhVoices.map(v => {
@@ -2225,7 +2356,7 @@ function openSettings() {
                   <div class="vname">${gIcon} ${v.name}</div>
                   <div class="vmeta">${v.lang}${v.default ? ' · 系統預設' : ''}</div>
                 </div>
-                <button class="try-btn" onclick="event.stopPropagation();tryVoice('${v.voiceURI.replace(/'/g, "\\'")}')">▶ 試聽</button>
+                <button class="try-btn" onclick="event.stopPropagation();tryVoice('${v.voiceURI.replace(/'/g, "\\'")}')">試聽</button>
               </div>
             `;
           }).join("")}
@@ -2235,7 +2366,7 @@ function openSettings() {
       <div class="settings-section">
         <div class="label">試聽目前設定</div>
         <button class="speak-btn" style="width:100%" onclick="speak('${sampleText}', 0.85)">
-          🔊 用目前的聲音念一次
+          🔊 立即試聽
         </button>
         <div style="font-size:12px;color:#999;margin-top:8px;text-align:center">
           ${settings.gender === 'male' ? '男生年輕音' : '女生年輕音'} · 慢速教學模式
