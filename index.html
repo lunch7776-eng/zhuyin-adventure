@@ -597,6 +597,203 @@
     font-size: 32px;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
   }
+
+  /* === 2D 探索玩法 === */
+  .explore-banner {
+    background: white;
+    border-radius: 20px;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 20px;
+    color: #333;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    margin: 6px 0;
+  }
+  .explore-banner .ezone-name { color: #d35400; }
+  .explore-banner .ezone-progress { color: #2ecc71; margin-left: 8px; }
+  .explore-hint {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin: 4px 0 10px;
+  }
+  .explore-stage {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: min(60vh, 500px);
+    background: linear-gradient(135deg, #c8e6f5 0%, #b8e6c1 50%, #ffe7a0 100%);
+    border-radius: 24px;
+    overflow: hidden;
+    cursor: pointer;
+    margin: 0 auto 12px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    touch-action: manipulation;
+  }
+  .explore-stage.zone-initials { background: linear-gradient(135deg, #a8d8f0 0%, #c8e6f5 100%); }
+  .explore-stage.zone-finals   { background: linear-gradient(135deg, #b8e6c1 0%, #d4f5d4 100%); }
+  .explore-stage.zone-combined { background: linear-gradient(135deg, #ffe7a0 0%, #fff4d4 100%); }
+  /* 地面紋理（簡單草地點點）*/
+  .explore-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px),
+      radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 40px 40px, 28px 28px;
+    background-position: 0 0, 14px 14px;
+    pointer-events: none;
+  }
+
+  .explore-zhuyin {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    background: white;
+    border: 4px solid #d35400;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: #d35400;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+    animation: bob 2.4s ease-in-out infinite;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.5s, transform 0.5s;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+  }
+  .explore-zhuyin.combined { font-size: 18px; }
+  .explore-zhuyin.collected {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, calc(-50% + 0px)); }
+    50%      { transform: translate(-50%, calc(-50% - 6px)); }
+  }
+
+  .explore-robot {
+    position: absolute;
+    width: 80px;
+    height: 100px;
+    pointer-events: none;
+    transition: left 0.5s ease-out, top 0.5s ease-out;
+    z-index: 5;
+    transform: translate(-50%, -100%); /* anchor = feet */
+  }
+  .explore-robot .robot-img,
+  .explore-robot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+  .explore-robot.walking .robot-img {
+    animation: robotBobWalk 0.35s ease-in-out infinite;
+  }
+  @keyframes robotBobWalk {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25%      { transform: translateY(-3px) rotate(-3deg); }
+    75%      { transform: translateY(-3px) rotate(3deg); }
+  }
+  .explore-robot.flipped img { transform: scaleX(-1); }
+
+  .explore-popup {
+    position: absolute;
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+    z-index: 50;
+    text-align: center;
+    transform: translate(-50%, -100%);
+    pointer-events: auto;
+    min-width: 220px;
+    animation: popupIn 0.25s ease-out;
+  }
+  @keyframes popupIn {
+    0%   { opacity: 0; transform: translate(-50%, -85%) scale(0.6); }
+    100% { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+  }
+  .explore-popup::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 10px solid transparent;
+    border-top-color: white;
+  }
+  .explore-popup.flip-down {
+    transform: translate(-50%, 0);
+  }
+  .explore-popup.flip-down::after {
+    bottom: auto;
+    top: -10px;
+    border-top-color: transparent;
+    border-bottom-color: white;
+  }
+  .explore-popup .ep-zhuyin {
+    font-size: 48px;
+    font-weight: 900;
+    color: #d35400;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .explore-popup .ep-zhuyin.combined { font-size: 36px; }
+  .explore-popup .ep-example {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 12px;
+  }
+  .explore-popup button {
+    background: #fbc531;
+    border: none;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    margin: 4px;
+    box-shadow: 0 3px 0 #d4a017;
+  }
+  .explore-popup button:active { transform: translateY(2px); box-shadow: 0 1px 0 #d4a017; }
+  .explore-popup .ep-collect {
+    background: #2ecc71;
+    box-shadow: 0 3px 0 #27ae60;
+  }
+  .explore-popup .ep-collect:active { box-shadow: 0 1px 0 #27ae60; }
+
+  .explore-progress-bar {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 12px;
+    height: 14px;
+    background: white;
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .explore-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    border-radius: 999px;
+    transition: width 0.5s;
+  }
+
+  @media (max-width: 600px) {
+    .explore-stage { height: 55vh; }
+    .explore-zhuyin { width: 48px; height: 48px; font-size: 24px; }
+    .explore-zhuyin.combined { font-size: 14px; }
+    .explore-robot { width: 64px; height: 84px; }
+  }
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-14px); }
@@ -1239,8 +1436,250 @@ function playRobotAnim(name, frameMs = 110) {
   return true;
 }
 
+// =====================================================
+// 2D 探索玩法（主玩法）
+// 點地圖 → BOBO 走過去 → 走到注音附近自動觸發 popup → 念 → 收集
+// =====================================================
+
+const EXPLORE_ZONE_META = {
+  initials: { name: "🏠 聲符村莊",   cls: "zone-initials" },
+  finals:   { name: "🌳 韻符森林",   cls: "zone-finals" },
+  combined: { name: "🏝️ 結合韻島", cls: "zone-combined" },
+};
+
+let exploreState = null;
+let _exploreInteracting = false;
+let _exploreWalkTimer = null;
+
+function placeZhuyinOnMap(items, w, h) {
+  const positions = [];
+  const minDist = items.length > 18 ? 90 : 110;
+  const margin = 50;
+  for (const z of items) {
+    let x, y, attempts = 0;
+    do {
+      x = margin + Math.random() * (w - margin * 2);
+      y = margin + Math.random() * (h - margin * 2);
+      attempts++;
+    } while (
+      attempts < 80 &&
+      positions.some(p => Math.hypot(p.x - x, p.y - y) < minDist)
+    );
+    positions.push({ z, x, y });
+  }
+  return positions;
+}
+
 function startRobotAdventure() {
-  nextRobotRound();
+  // 新版主玩法：2D 探索
+  startRobotExplore();
+}
+
+function startRobotExplore() {
+  const stage = state.robot.stage;
+  const stageSet = getRobotStageSet(stage);
+  const collected = state.robot.collected[stage];
+
+  // 整個 stage 已完成 → 進下一個
+  if (collected.length >= stageSet.length) {
+    return showRobotStageComplete();
+  }
+
+  // 還沒收集的注音散布在地圖上
+  const remaining = stageSet.filter(z => !collected.includes(z));
+
+  // 用「假設」的地圖尺寸先 layout，render 後再校正到實際尺寸
+  const W = 800, H = 480;
+  const positions = placeZhuyinOnMap(remaining, W, H);
+
+  exploreState = {
+    stage,
+    stageSet,
+    positions,
+    mapW: W,
+    mapH: H,
+    robot: { x: W / 2, y: H / 2 },
+    facing: 1,
+  };
+  _exploreInteracting = false;
+
+  renderExplore();
+}
+
+function renderExplore() {
+  const { stage, stageSet, positions, robot, facing } = exploreState;
+  const meta = EXPLORE_ZONE_META[stage];
+  const collected = state.robot.collected[stage];
+  const isCombined = stage === "combined";
+  const zhuyinClass = isCombined ? "explore-zhuyin combined" : "explore-zhuyin";
+
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${state.totalStars}</div>
+      </div>
+    </div>
+    <div class="explore-banner">
+      <span class="ezone-name">${meta.name}</span>
+      <span class="ezone-progress">${collected.length} / ${stageSet.length}</span>
+    </div>
+    <div class="explore-hint">點地圖任何位置 → BOBO 走過去 → 走到注音會自動跟你互動</div>
+    <div class="explore-stage ${meta.cls}" id="exploreStage" onclick="onExploreClick(event)">
+      ${positions.map(p => `
+        <div class="${zhuyinClass}" data-z="${p.z}"
+             style="left:${p.x}px;top:${p.y}px"
+             aria-label="注音 ${p.z}">${p.z}</div>
+      `).join("")}
+      <div id="exploreRobot" class="explore-robot ${facing < 0 ? 'flipped' : ''}"
+           style="left:${robot.x}px;top:${robot.y}px">
+        <img id="robotImg" class="robot-img" src="${ROBOT_IDLE_SRC}" alt="BOBO"
+             onerror="this.style.display='none'">
+      </div>
+    </div>
+    <div class="explore-progress-bar">
+      <div class="explore-progress-fill"
+           style="width:${(collected.length / stageSet.length) * 100}%"></div>
+    </div>
+  `;
+
+  // 偵測「碰巧 spawn 時就站在注音旁」— 等 100ms 給 render 完
+  setTimeout(() => checkNearestZhuyin(), 200);
+}
+
+function onExploreClick(ev) {
+  if (_exploreInteracting) return;
+  // 點到注音本身（pointer-events:none 不會觸發，但保險）或機器人 — 都當地圖點擊
+  const stageEl = document.getElementById("exploreStage");
+  const rect = stageEl.getBoundingClientRect();
+  // 把點擊座標映射到 layout 座標系（mapW × mapH）
+  const scaleX = exploreState.mapW / rect.width;
+  const scaleY = exploreState.mapH / rect.height;
+  const x = (ev.clientX - rect.left) * scaleX;
+  const y = (ev.clientY - rect.top) * scaleY;
+  moveRobotTo(x, y);
+}
+
+function moveRobotTo(x, y) {
+  if (_exploreInteracting) return;
+  const r = document.getElementById("exploreRobot");
+  if (!r) return;
+  const old = exploreState.robot;
+  const dx = x - old.x, dy = y - old.y;
+  const dist = Math.hypot(dx, dy);
+  // 速度：300 px/s（約 1.6 秒走滿地圖對角）
+  const duration = Math.max(220, Math.min(1800, dist / 300 * 1000));
+
+  exploreState.robot = { x, y };
+  exploreState.facing = dx >= 0 ? 1 : -1;
+  r.classList.toggle("flipped", exploreState.facing < 0);
+
+  r.style.transition = `left ${duration}ms ease-out, top ${duration}ms ease-out`;
+  r.style.left = x + "px";
+  r.style.top  = y + "px";
+  r.classList.add("walking");
+
+  if (_exploreWalkTimer) clearTimeout(_exploreWalkTimer);
+  _exploreWalkTimer = setTimeout(() => {
+    r.classList.remove("walking");
+    checkNearestZhuyin();
+  }, duration + 30);
+}
+
+function checkNearestZhuyin() {
+  if (_exploreInteracting) return;
+  const { stage, positions, robot } = exploreState;
+  const collected = state.robot.collected[stage];
+  const TRIGGER = 70;
+  let closest = null, minD = TRIGGER;
+  for (const p of positions) {
+    if (collected.includes(p.z)) continue;
+    const d = Math.hypot(p.x - robot.x, p.y - robot.y);
+    if (d < minD) { minD = d; closest = p; }
+  }
+  if (closest) {
+    showExplorePopup(closest);
+  }
+}
+
+function showExplorePopup(p) {
+  _exploreInteracting = true;
+  const stage = state.robot.stage;
+  const isCombined = stage === "combined";
+  const item = ROBOT_STAGE_META[stage].list().find(x => x.z === p.z);
+  const example = item ? item.ex : "";
+  const emoji = item ? (item.emo || "") : "";
+
+  // 先 speak 一次
+  speak(getRobotSpeakText(stage, p.z));
+
+  const stageEl = document.getElementById("exploreStage");
+  // 拿掉舊 popup（防重複）
+  stageEl.querySelectorAll(".explore-popup").forEach(el => el.remove());
+
+  const popup = document.createElement("div");
+  popup.className = "explore-popup";
+  // popup 位置：機器人上方；若機器人靠頂，改 popup 顯示在下方（翻轉箭頭）
+  const popupX = Math.max(120, Math.min(exploreState.mapW - 120, exploreState.robot.x));
+  let popupY;
+  let flipDown = false;
+  if (exploreState.robot.y < 220) {
+    // 太靠上 → popup 顯示在機器人下方
+    popupY = exploreState.robot.y + 110;
+    flipDown = true;
+  } else {
+    popupY = exploreState.robot.y - 90;
+  }
+  popup.style.left = popupX + "px";
+  popup.style.top  = popupY + "px";
+
+  if (flipDown) popup.classList.add("flip-down");
+  popup.innerHTML = `
+    <div class="ep-zhuyin ${isCombined ? 'combined' : ''}">${p.z}</div>
+    <div class="ep-example">${emoji} ${example}</div>
+    <button onclick="speak('${getRobotSpeakText(stage, p.z)}', 0.7)">🔊 再聽</button>
+    <button class="ep-collect" onclick="collectExploreZhuyin('${p.z}')">✓ 我會念了</button>
+  `;
+  stageEl.appendChild(popup);
+}
+
+function collectExploreZhuyin(z) {
+  const stage = state.robot.stage;
+  if (!state.robot.collected[stage].includes(z)) {
+    state.robot.collected[stage].push(z);
+    saveState();
+  }
+  // 視覺：注音縮成消失
+  const zEl = document.querySelector(`.explore-zhuyin[data-z="${z}"]`);
+  if (zEl) zEl.classList.add("collected");
+  // popup 關閉
+  document.querySelectorAll(".explore-popup").forEach(el => el.remove());
+  // 機器人 happy 動畫 + 念回饋
+  playRobotAnim("happy");
+  speak(`好棒！${z}`);
+  // 更新進度條
+  const fill = document.querySelector(".explore-progress-fill");
+  if (fill) {
+    const stageSet = getRobotStageSet(stage);
+    fill.style.width = ((state.robot.collected[stage].length / stageSet.length) * 100) + "%";
+  }
+  // 更新 banner 進度
+  const prog = document.querySelector(".ezone-progress");
+  if (prog) {
+    const stageSet = getRobotStageSet(stage);
+    prog.textContent = `${state.robot.collected[stage].length} / ${stageSet.length}`;
+  }
+  _exploreInteracting = false;
+
+  // 全部收集完？
+  const stageSet = getRobotStageSet(stage);
+  if (state.robot.collected[stage].length >= stageSet.length) {
+    setTimeout(() => {
+      showRobotStageComplete();
+    }, 900);
+  }
 }
 
 function nextRobotRound() {
@@ -1865,6 +2304,8 @@ window.renderAlphabet = renderAlphabet;
 window.playZhuyinCell = playZhuyinCell;
 window.startRobotAdventure = startRobotAdventure;
 window.pickRobotChoice = pickRobotChoice;
+window.onExploreClick = onExploreClick;
+window.collectExploreZhuyin = collectExploreZhuyin;
 renderHome();
 </script>
 </body>
