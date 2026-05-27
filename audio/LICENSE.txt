@@ -1,0 +1,10 @@
+音檔來源：中華民國教育部「國語注音符號手冊 — 開放部件」
+原始下載：https://language.moe.gov.tw/001/Upload/files/site_content/M0001/juyin/
+
+著作權：2017 © 教育部
+授權條款：Creative Commons Attribution 4.0 International (CC BY 4.0)
+詳細條款：https://creativecommons.org/licenses/by/4.0/
+
+本資料夾中 u3105.wav ~ u3129.wav 共 37 個音檔對應到注音聲符／韻符 ㄅ~ㄩ。
+原始檔名為 F1.WAV ~ F37.WAV，已重新命名為 Unicode codepoint 格式
+（如 u3105.wav = ㄅ，u+3105 是注音字元 ㄅ 的 Unicode 代碼）。

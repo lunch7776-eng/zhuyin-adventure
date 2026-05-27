@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注音大冒險 — ㄅㄆㄇ 闖關</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #ffe9c4 0%, #ffd6e7 50%, #c4f0ff 100%);
+    color: #2b2b2b;
+    overflow-x: hidden;
+    user-select: none;
+  }
+  #app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 頂列：星星 + 回首頁 */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .topbar .stars {
+    font-size: 28px;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 999px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+  }
+  .topbar button {
+    background: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+    color: #555;
+  }
+  .topbar button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+
+  /* 首頁：闖關地圖 */
+  .home h1 {
+    font-size: 42px;
+    text-align: center;
+    margin: 30px 0 10px;
+    color: #d35400;
+    text-shadow: 3px 3px 0 white;
+  }
+  .home .subtitle {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 30px;
+  }
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    padding: 10px;
+  }
+  .level-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+    border: 4px solid transparent;
+  }
+  .level-card:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .level-card .badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #d35400;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .level-card .emoji { font-size: 56px; line-height: 1; }
+  .level-card h3 { font-size: 22px; margin-top: 8px; color: #333; }
+  .level-card p { font-size: 14px; color: #777; margin-top: 6px; line-height: 1.4; }
+  .level-card .progress-stars {
+    margin-top: 12px;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: #fbc531;
+  }
+  .level-card.locked { opacity: 0.45; cursor: not-allowed; }
+  .level-card.locked::after {
+    content: "🔒 先過上一關";
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  /* 遊戲畫面共用 */
+  .game-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  .question-card {
+    background: white;
+    border-radius: 32px;
+    padding: 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+  }
+  .big-zhuyin {
+    font-size: 120px;
+    font-weight: 900;
+    color: #d35400;
+    line-height: 1;
+    margin: 10px 0;
+  }
+  .emoji-big {
+    font-size: 140px;
+    line-height: 1;
+    margin: 10px 0;
+  }
+  .hint {
+    font-size: 18px;
+    color: #555;
+    margin: 10px 0;
+  }
+  .speak-btn {
+    background: #fbc531;
+    border: none;
+    padding: 18px 36px;
+    border-radius: 999px;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #d4a017;
+    margin: 10px 0;
+  }
+  .speak-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #d4a017; }
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 600px;
+  }
+  .choice {
+    background: white;
+    border: 4px solid #e0e0e0;
+    border-radius: 24px;
+    padding: 24px 16px;
+    font-size: 56px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+    color: #333;
+    transition: transform 0.1s;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .choice:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+  .choice.correct { background: #b8f5b8; border-color: #2ecc71; animation: pop 0.4s; }
+  .choice.wrong { background: #ffcccb; border-color: #e74c3c; animation: shake 0.4s; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* 過關彈窗 */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 32px;
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+    animation: pop 0.5s;
+  }
+  .modal-content .big-emoji { font-size: 100px; }
+  .modal-content h2 { font-size: 32px; color: #d35400; margin: 16px 0; }
+  .modal-content p { font-size: 18px; color: #666; margin-bottom: 20px; }
+  .modal-content button {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    margin: 4px;
+    box-shadow: 0 4px 0 #27ae60;
+  }
+  .modal-content button:active { transform: translateY(2px); box-shadow: 0 2px 0 #27ae60; }
+  .modal-content button.secondary { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
+
+  /* 設定面板 */
+  .settings-modal .modal-content { max-width: 460px; text-align: left; }
+  .settings-modal h2 { text-align: center; }
+  .settings-section { margin: 18px 0; }
+  .settings-section .label {
+    font-size: 14px;
+    color: #777;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .gender-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .gender-toggle button {
+    background: white;
+    color: #333;
+    border: 4px solid #e0e0e0;
+    padding: 18px 12px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+  }
+  .gender-toggle button.active {
+    border-color: #2ecc71;
+    background: #d4f5d4;
+    color: #1f7a3f;
+  }
+  .gender-toggle button .em { font-size: 36px; display: block; margin-bottom: 4px; }
+
+  .voice-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 8px;
+    background: #fafafa;
+  }
+  .voice-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: white;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .voice-item.active { border-color: #2ecc71; background: #ecfff0; }
+  .voice-item .vname { flex: 1; font-weight: 700; }
+  .voice-item .vmeta { font-size: 11px; color: #999; margin-top: 2px; font-weight: 400; }
+  .voice-item .try-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .voice-empty {
+    text-align: center;
+    color: #aaa;
+    padding: 20px;
+    font-size: 14px;
+  }
+  .gear-btn {
+    background: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+    margin-left: 8px;
+  }
+  .gear-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .topbar .right-group { display: flex; align-items: center; gap: 8px; }
+
+  /* 進度條 */
+  .progress-bar {
+    width: 100%;
+    max-width: 600px;
+    height: 14px;
+    background: white;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    border-radius: 999px;
+    transition: width 0.3s;
+  }
+
+  /* 拼字關卡 */
+  .word-slots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .slot {
+    width: 80px;
+    height: 100px;
+    background: #f5f5f5;
+    border: 4px dashed #ccc;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 900;
+    color: #d35400;
+  }
+  .slot.filled { background: white; border-style: solid; border-color: #2ecc71; }
+  .slot.target { border-color: #fbc531; background: #fffae0; }
+  .pool {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .pool-item {
+    background: #fbc531;
+    color: white;
+    border: none;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    font-size: 32px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d4a017;
+  }
+  .pool-item:active { transform: translateY(2px); box-shadow: 0 2px 0 #d4a017; }
+  .pool-item:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* 飄星星動畫 */
+  .floating-star {
+    position: fixed;
+    font-size: 40px;
+    pointer-events: none;
+    animation: floatUp 1.5s ease-out forwards;
+    z-index: 200;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-300px) scale(1.5); opacity: 0; }
+  }
+
+  /* 家長提示 */
+  .parent-note {
+    background: rgba(255,255,255,0.7);
+    border-left: 6px solid #3498db;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #555;
+    margin: 16px 0;
+    text-align: left;
+  }
+  .parent-note strong { color: #2980b9; }
+
+  @media (max-width: 600px) {
+    .big-zhuyin { font-size: 90px; }
+    .emoji-big { font-size: 100px; }
+    .choice { font-size: 42px; min-height: 100px; }
+    .home h1 { font-size: 32px; }
+  }
+
+  /* 注音字典入口（首頁大按鈕）*/
+  .alphabet-entry {
+    background: linear-gradient(135deg, #ffa07a, #ff7f50);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 20px 24px;
+    margin: 0 10px 24px;
+    width: calc(100% - 20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #d35400;
+    text-align: left;
+  }
+  .alphabet-entry:active { transform: translateY(3px); box-shadow: 0 3px 0 #d35400; }
+  .alphabet-entry .ae-emoji { font-size: 48px; line-height: 1; }
+  .alphabet-entry .ae-title { font-size: 22px; font-weight: 900; }
+  .alphabet-entry .ae-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
+
+  /* 注音字典頁 */
+  .alphabet-page h1 {
+    text-align: center;
+    font-size: 32px;
+    color: #d35400;
+    margin: 16px 0 4px;
+  }
+  .alphabet-page .alphabet-subtitle {
+    text-align: center;
+    font-size: 15px;
+    color: #777;
+    margin-bottom: 20px;
+  }
+  .zhuyin-section {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+  }
+  .zhuyin-section h2 {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+    background: #fff3cd;
+    border-radius: 999px;
+    display: inline-block;
+  }
+  .zhuyin-section .group-hint {
+    font-size: 13px;
+    color: #999;
+    margin-left: 8px;
+  }
+  .zhuyin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+    gap: 10px;
+  }
+  .zh-cell {
+    background: #fffbf0;
+    border: 3px solid #ffe8a0;
+    border-radius: 16px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.08s, background 0.15s;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.06);
+    user-select: none;
+  }
+  .zh-cell:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.06); background: #fff3c4; }
+  .zh-cell.playing { background: #b8f5b8; border-color: #2ecc71; }
+  .zh-cell .zc-zhuyin {
+    font-size: 30px;
+    font-weight: 900;
+    color: #d35400;
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+  .zh-cell .zc-emoji { font-size: 24px; line-height: 1; margin: 4px 0; }
+  .zh-cell .zc-example {
+    font-size: 14px;
+    color: #555;
+    font-weight: 700;
+  }
+  /* 結合韻的注音字較長 */
+  .zh-cell.combined .zc-zhuyin { font-size: 22px; }
+
+  @media (max-width: 600px) {
+    .zhuyin-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+    .zh-cell .zc-zhuyin { font-size: 26px; }
+    .zh-cell.combined .zc-zhuyin { font-size: 19px; }
+    .alphabet-entry .ae-emoji { font-size: 36px; }
+    .alphabet-entry .ae-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// =====================================================
+// 注音大冒險 — 按發聲學分級設計
+// 設計理念：
+//   Lv1 雙唇音（看得到嘴型 → 最容易）
+//   Lv2 聽音找字（聲符全集，從易混組開始補強）
+//   Lv3 結合韻拼圖（介音 + 韻 → 拼讀流暢度）
+// =====================================================
+
+const STATE_KEY = "zhuyin_game_progress";
+let state = loadState();
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY));
+    return s || { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } };
+  } catch { return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } }; }
+}
+function saveState() {
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+// ----------- 語音設定（台灣口音 + 男女切換 + 年輕音調）-----------
+const SETTINGS_KEY = "zhuyin_voice_settings";
+let settings = loadSettings();
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    return s || { gender: "female", voiceURI: null };
+  } catch { return { gender: "female", voiceURI: null }; }
+}
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function getZhTwVoices() {
+  if (!window.speechSynthesis) return [];
+  const all = window.speechSynthesis.getVoices();
+  // 嚴格優先台灣口音；找不到才退而求其次
+  const tw = all.filter(v => v.lang === "zh-TW" || v.lang === "zh-Hant-TW");
+  if (tw.length > 0) return tw;
+  // 退而求其次：含 TW / Taiwan / Hant 的
+  const fallback = all.filter(v => /zh[-_]Hant|TW|Taiwan/i.test(v.lang + " " + v.name));
+  if (fallback.length > 0) return fallback;
+  // 再退：任何中文
+  return all.filter(v => v.lang.startsWith("zh"));
+}
+
+// 啟發式：用 voice 名稱猜性別（含中文姓名）
+function guessGender(voice) {
+  const n = (voice.name || "") + " " + (voice.voiceURI || "");
+  // 已知 macOS / iOS 中文女聲名稱（含英拼與中文）
+  const female = /Mei[\s-]?Jia|Ya[\s-]?Ling|Mei[\s-]?Chia|Sin[\s-]?Ji|Ting[\s-]?Ting|Li[\s-]?Mu|female|woman|girl|美佳|婷婷|語舒|善怡|雅琳|美|佳|玲|怡|婷|舒|慧|君|雅|女/i;
+  const male = /Hsiao[\s-]?Chien|male|man|boy|哥|男|小哥|志|偉|傑|宇|軒|翔/i;
+  // 先檢查明確男聲（避免被女聲名字誤判，因為男聲樣本少所以放前面）
+  if (male.test(n) && !/female/i.test(n)) return "male";
+  if (female.test(n)) return "female";
+  return null;
+}
+
+function pickVoice() {
+  const zhVoices = getZhTwVoices();
+  if (zhVoices.length === 0) return null;
+  // 1. 使用者明確選的
+  if (settings.voiceURI) {
+    const found = zhVoices.find(v => v.voiceURI === settings.voiceURI);
+    if (found) return found;
+  }
+  // 2. 性別匹配
+  const matched = zhVoices.find(v => guessGender(v) === settings.gender);
+  if (matched) return matched;
+  // 3. 找 default（通常是系統預設台灣女聲）
+  return zhVoices.find(v => v.default) || zhVoices[0];
+}
+
+// 年輕化音調：女偏高 1.25、男偏低 0.95
+// 如果系統沒有對應性別的台灣 voice → 用 pitch 加大模擬
+function getPitchForGender() {
+  const v = pickVoice();
+  const detectedGender = v ? guessGender(v) : null;
+  if (settings.gender === "male") {
+    // 想要男聲但系統只有女聲 → 大幅降低 pitch
+    return detectedGender === "male" ? 1.05 : 0.65;
+  } else {
+    // 想要女聲：年輕化 → 略升 pitch
+    return detectedGender === "female" ? 1.3 : 1.3;
+  }
+}
+
+if (typeof speechSynthesis !== "undefined") {
+  speechSynthesis.onvoiceschanged = () => { /* voices loaded */ };
+  // 觸發一次載入
+  speechSynthesis.getVoices();
+}
+
+// ---- 教育部開放音檔（CC BY 4.0）----
+// 37 個基本聲符韻符 ㄅ~ㄩ (U+3105 ~ U+3129) 對應 audio/u####.wav
+const ZHUYIN_AUDIO_RANGE = [0x3105, 0x3129];
+function hasOfficialAudio(ch) {
+  if (!ch || ch.length !== 1) return false;
+  const cp = ch.charCodeAt(0);
+  return cp >= ZHUYIN_AUDIO_RANGE[0] && cp <= ZHUYIN_AUDIO_RANGE[1];
+}
+function audioUrlFor(ch) {
+  return `audio/u${ch.charCodeAt(0).toString(16)}.wav`;
+}
+
+// 全域播放控制：避免重疊
+let currentAudio = null;
+function stopAllAudio() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+}
+
+// 用真實錄音播放一個或多個注音字元（依序播放）
+function playOfficialSequence(chars, onDone) {
+  let i = 0;
+  function next() {
+    if (i >= chars.length) { if (onDone) onDone(); return; }
+    const ch = chars[i++];
+    const audio = new Audio(audioUrlFor(ch));
+    currentAudio = audio;
+    audio.playbackRate = 0.95;
+    audio.onended = next;
+    audio.onerror = next; // 失敗就跳過
+    audio.play().catch(() => next());
+  }
+  next();
+}
+
+// 預錄 TTS 段：先試 audio/tts/<gender>/<text>.mp3，沒有才 fallback SpeechSynthesis
+function speakTTSSegment(text, rate, onDone) {
+  // 依標點再切成小段（預錄是「蘋果」「答對了」「再聽一次」這種短詞句）
+  const parts = text.split(/[。！？，：；、\s]+/).filter(Boolean);
+  const cleaned = parts.map(p => p.replace(/[ˊˇˋ˙]/g, "")).filter(Boolean);
+  let i = 0;
+  function next() {
+    if (i >= cleaned.length) { if (onDone) onDone(); return; }
+    const seg = cleaned[i++];
+    const url = `audio/tts/${settings.gender}/${encodeURIComponent(seg)}.mp3`;
+    const audio = new Audio(url);
+    currentAudio = audio;
+    let fellBack = false;
+    audio.onended = next;
+    audio.onerror = () => {
+      if (fellBack) return;
+      fellBack = true;
+      // 沒有預錄 → fallback 系統 TTS
+      if (!window.speechSynthesis) { next(); return; }
+      const u = new SpeechSynthesisUtterance(seg);
+      u.lang = "zh-TW";
+      u.rate = rate;
+      u.pitch = getPitchForGender();
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.onend = next;
+      u.onerror = next;
+      speechSynthesis.speak(u);
+    };
+    audio.play().catch(() => audio.onerror());
+  }
+  next();
+}
+
+// 主 speak()：智慧切割 — 注音字元用官方錄音，其他用 TTS
+// 例：speak("ㄅ，爸爸") → 先播官方 ㄅ 錄音，再 TTS 念「爸爸」
+// 例：speak("ㄆㄧㄥˊ，蘋果") → 官方 ㄆ＋ㄧ＋ㄥ → TTS「蘋果」
+function speak(text, rate = 0.85) {
+  stopAllAudio();
+  if (!text) return;
+
+  // 把字串切成 [{type:'audio', chars:'ㄅ'}, {type:'tts', text:'，爸爸'}] 序列
+  const segments = [];
+  let buf = "", bufType = null;
+  for (const ch of text) {
+    // 把聲調符號(ˊˇˋ˙)歸入前一個 audio 段（雖然不播音，方便辨識）
+    // 但為了發音正確，聲調不單獨播音檔（教育部音檔不含聲調）
+    const isZhuyin = hasOfficialAudio(ch);
+    const t = isZhuyin ? "audio" : "tts";
+    if (t !== bufType && buf) {
+      segments.push({ type: bufType, text: buf });
+      buf = "";
+    }
+    buf += ch;
+    bufType = t;
+  }
+  if (buf) segments.push({ type: bufType, text: buf });
+
+  // 依序播放
+  let idx = 0;
+  function playNext() {
+    if (idx >= segments.length) return;
+    const seg = segments[idx++];
+    if (seg.type === "audio") {
+      playOfficialSequence(seg.text.split(""), playNext);
+    } else {
+      // TTS 段 → 預錄 mp3 優先，失敗 fallback SpeechSynthesis
+      speakTTSSegment(seg.text, rate, playNext);
+    }
+  }
+  playNext();
+}
+
+// ----------- 工具 -----------
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function flyStar(x, y) {
+  const star = document.createElement("div");
+  star.className = "floating-star";
+  star.textContent = "⭐";
+  star.style.left = x + "px";
+  star.style.top = y + "px";
+  document.body.appendChild(star);
+  setTimeout(() => star.remove(), 1500);
+}
+function celebrateBurst() {
+  const emojis = ["⭐","🌟","✨","🎉","🎊","💫"];
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      const star = document.createElement("div");
+      star.className = "floating-star";
+      star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      star.style.left = (window.innerWidth/2 - 100 + Math.random()*200) + "px";
+      star.style.top = (window.innerHeight/2) + "px";
+      document.body.appendChild(star);
+      setTimeout(() => star.remove(), 1500);
+    }, i * 80);
+  }
+}
+
+// =====================================================
+// 全部注音表（21 聲符 + 16 韻符 + 21 結合韻）
+// =====================================================
+const ZHUYIN_TABLE = {
+  initials: [ // 21 個聲符 — 依發聲學分組
+    { z: "ㄅ", ex: "爸", emo: "👨" }, { z: "ㄆ", ex: "皮", emo: "🍌" },
+    { z: "ㄇ", ex: "媽", emo: "👩" }, { z: "ㄈ", ex: "飛", emo: "✈️" },
+    { z: "ㄉ", ex: "弟", emo: "🧒" }, { z: "ㄊ", ex: "兔", emo: "🐰" },
+    { z: "ㄋ", ex: "牛", emo: "🐮" }, { z: "ㄌ", ex: "鹿", emo: "🦌" },
+    { z: "ㄍ", ex: "哥", emo: "👦" }, { z: "ㄎ", ex: "苦", emo: "😖" },
+    { z: "ㄏ", ex: "猴", emo: "🐵" },
+    { z: "ㄐ", ex: "雞", emo: "🐔" }, { z: "ㄑ", ex: "汽", emo: "🚗" },
+    { z: "ㄒ", ex: "西", emo: "🍉" },
+    { z: "ㄓ", ex: "豬", emo: "🐷" }, { z: "ㄔ", ex: "車", emo: "🚙" },
+    { z: "ㄕ", ex: "蛇", emo: "🐍" }, { z: "ㄖ", ex: "日", emo: "☀️" },
+    { z: "ㄗ", ex: "字", emo: "📝" }, { z: "ㄘ", ex: "醋", emo: "🍶" },
+    { z: "ㄙ", ex: "絲", emo: "🧵" },
+  ],
+  finals: [ // 16 個韻符
+    { z: "ㄚ", ex: "啊", emo: "😮" }, { z: "ㄛ", ex: "喔", emo: "😯" },
+    { z: "ㄜ", ex: "鵝", emo: "🦢" }, { z: "ㄝ", ex: "也", emo: "✏️" },
+    { z: "ㄞ", ex: "愛", emo: "❤️" }, { z: "ㄟ", ex: "黑", emo: "⬛" },
+    { z: "ㄠ", ex: "高", emo: "🦒" }, { z: "ㄡ", ex: "樓", emo: "🏢" },
+    { z: "ㄢ", ex: "安", emo: "🛡️" }, { z: "ㄣ", ex: "恩", emo: "🤗" },
+    { z: "ㄤ", ex: "王", emo: "👑" }, { z: "ㄥ", ex: "鷹", emo: "🦅" },
+    { z: "ㄦ", ex: "兒", emo: "👶" },
+    { z: "ㄧ", ex: "衣", emo: "👕" }, { z: "ㄨ", ex: "屋", emo: "🏠" },
+    { z: "ㄩ", ex: "魚", emo: "🐟" },
+  ],
+  combined: [ // 21 個結合韻 — 依介音分組（ㄧ系 / ㄨ系 / ㄩ系）
+    { z: "ㄧㄚ", ex: "鴨", emo: "🦆" }, { z: "ㄧㄛ", ex: "喲", emo: "❗" },
+    { z: "ㄧㄝ", ex: "葉", emo: "🍂" }, { z: "ㄧㄠ", ex: "腰", emo: "💃" },
+    { z: "ㄧㄡ", ex: "油", emo: "🛢️" }, { z: "ㄧㄢ", ex: "鹽", emo: "🧂" },
+    { z: "ㄧㄣ", ex: "音", emo: "🎵" }, { z: "ㄧㄤ", ex: "羊", emo: "🐑" },
+    { z: "ㄧㄥ", ex: "鷹", emo: "🦅" },
+    { z: "ㄨㄚ", ex: "蛙", emo: "🐸" }, { z: "ㄨㄛ", ex: "我", emo: "👋" },
+    { z: "ㄨㄞ", ex: "歪", emo: "🌀" }, { z: "ㄨㄟ", ex: "為", emo: "🌟" },
+    { z: "ㄨㄢ", ex: "彎", emo: "🌙" }, { z: "ㄨㄣ", ex: "文", emo: "📚" },
+    { z: "ㄨㄤ", ex: "王", emo: "👑" }, { z: "ㄨㄥ", ex: "翁", emo: "👴" },
+    { z: "ㄩㄝ", ex: "月", emo: "🌙" }, { z: "ㄩㄢ", ex: "圓", emo: "⭕" },
+    { z: "ㄩㄣ", ex: "雲", emo: "☁️" }, { z: "ㄩㄥ", ex: "用", emo: "✋" },
+  ],
+};
+
+function renderAlphabet() {
+  stopAllAudio();
+  const app = document.getElementById("app");
+
+  const renderCell = (item, combinedClass = "") => `
+    <div class="zh-cell ${combinedClass}"
+         data-z="${item.z}" data-ex="${item.ex}"
+         onclick="playZhuyinCell(this)">
+      <div class="zc-zhuyin">${item.z}</div>
+      <div class="zc-emoji">${item.emo}</div>
+      <div class="zc-example">${item.ex}</div>
+    </div>
+  `;
+
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${state.totalStars}</div>
+      </div>
+    </div>
+    <div class="alphabet-page">
+      <h1>📖 注音字典</h1>
+      <div class="alphabet-subtitle">點任何一個方塊聽聽看怎麼念 + 例字</div>
+
+      <div class="zhuyin-section">
+        <h2>聲符</h2><span class="group-hint">${ZHUYIN_TABLE.initials.length} 個</span>
+        <div class="zhuyin-grid" style="margin-top:10px">
+          ${ZHUYIN_TABLE.initials.map(i => renderCell(i)).join("")}
+        </div>
+      </div>
+
+      <div class="zhuyin-section">
+        <h2>韻符</h2><span class="group-hint">${ZHUYIN_TABLE.finals.length} 個</span>
+        <div class="zhuyin-grid" style="margin-top:10px">
+          ${ZHUYIN_TABLE.finals.map(i => renderCell(i)).join("")}
+        </div>
+      </div>
+
+      <div class="zhuyin-section">
+        <h2>結合韻</h2><span class="group-hint">${ZHUYIN_TABLE.combined.length} 個 · 介音 ㄧ／ㄨ／ㄩ 接其他韻</span>
+        <div class="zhuyin-grid" style="margin-top:10px">
+          ${ZHUYIN_TABLE.combined.map(i => renderCell(i, "combined")).join("")}
+        </div>
+      </div>
+
+      <div class="parent-note" style="margin-bottom:30px">
+        <strong>給家長：</strong>這頁不計分、不闖關，純探索。
+        點注音 → 聽教育部官方錄音念注音 + 例字。
+        小孩玩幾天熟了，再回地圖闖 Lv1。
+      </div>
+    </div>
+  `;
+}
+
+function playZhuyinCell(el) {
+  // 移除其他正在播放的高亮
+  document.querySelectorAll(".zh-cell.playing").forEach(x => x.classList.remove("playing"));
+  el.classList.add("playing");
+  const z = el.dataset.z;
+  const ex = el.dataset.ex;
+  // 播注音 + 例字（注音段用官方音檔 / 結合韻拼接、例字用預錄 mp3）
+  speak(`${z}，${ex}`);
+  setTimeout(() => el.classList.remove("playing"), 1500);
+}
+
+// =====================================================
+// 首頁：闖關地圖
+// =====================================================
+const LEVELS = [
+  {
+    id: 1,
+    badge: "Lv 1 · 雙唇音",
+    emoji: "👄",
+    title: "嘴型偵探",
+    desc: "ㄅ ㄆ ㄇ ㄈ — 看嘴巴怎麼動就知道",
+    target: 5, // 集 5 顆星過關
+  },
+  {
+    id: 2,
+    badge: "Lv 2 · 聽音辨字",
+    emoji: "👂",
+    title: "聽音找朋友",
+    desc: "點喇叭聽聲音 → 找出對的字（會混的也一起練）",
+    target: 6,
+  },
+  {
+    id: 3,
+    badge: "Lv 3 · 結合韻",
+    emoji: "🧩",
+    title: "拼字小工匠",
+    desc: "看圖拼注音 — 西ㄒㄧ瓜ㄍㄨㄚ、月ㄩㄝˋ亮ㄌㄧㄤˋ",
+    target: 5,
+  },
+];
+
+function renderHome() {
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="stars">⭐ ${state.totalStars}</div>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <button onclick="resetProgress()">重新開始</button>
+      </div>
+    </div>
+    <div class="home">
+      <h1>🌈 注音大冒險 🌈</h1>
+      <div class="subtitle">點下面的關卡開始玩 · 每關 5-10 分鐘</div>
+
+      <button class="alphabet-entry" onclick="renderAlphabet()">
+        <div class="ae-emoji">📖</div>
+        <div>
+          <div class="ae-title">注音字典 — 先按按看怎麼念</div>
+          <div class="ae-desc">全部 58 個注音 · 點任何一個聽發音 + 例字 · 不計分</div>
+        </div>
+      </button>
+
+      <div class="level-grid">
+        ${LEVELS.map((lv, i) => {
+          const stars = state.levels[lv.id] || 0;
+          const locked = i > 0 && (state.levels[LEVELS[i-1].id] || 0) < LEVELS[i-1].target;
+          const starDisplay = "⭐".repeat(stars) + "☆".repeat(Math.max(0, lv.target - stars));
+          return `
+            <div class="level-card ${locked ? 'locked' : ''}"
+                 onclick="${locked ? '' : `startLevel(${lv.id})`}">
+              <div class="badge">${lv.badge}</div>
+              <div class="emoji">${lv.emoji}</div>
+              <h3>${lv.title}</h3>
+              <p>${lv.desc}</p>
+              <div class="progress-stars">${starDisplay}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      <div class="parent-note">
+        <strong>給家長：</strong>關卡依「發聲學難度」排序 — 雙唇音最容易（嘴型看得到）→ 聽辨易混組 → 結合韻拼讀。
+        建議一次只玩 1-2 關，過關後給點實體獎勵（貼紙、選晚餐之類）會更有效。
+        ⭐ 進度會自動存在這台裝置。
+      </div>
+      <div style="text-align:center;font-size:12px;color:#888;margin-top:20px;padding:10px">
+        🔊 注音發音音檔：2017 © 教育部「國語注音符號手冊」，
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:#888">CC BY 4.0</a>
+      </div>
+    </div>
+  `;
+}
+
+function resetProgress() {
+  if (confirm("確定要重來嗎？所有星星會歸零")) {
+    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 } };
+    saveState();
+    renderHome();
+  }
+}
+
+// =====================================================
+// 關卡 1：嘴型偵探（雙唇音 ㄅㄆㄇ + ㄈ）
+// =====================================================
+const LV1_BANK = [
+  { zhuyin: "ㄅ", mouthEmoji: "😗", hint: "嘴巴閉緊再爆開 — 像「爸爸」的開頭", example: "爸" },
+  { zhuyin: "ㄆ", mouthEmoji: "😮", hint: "嘴巴閉緊爆開＋吹一口氣 — 像「皮球」的「皮」", example: "皮" },
+  { zhuyin: "ㄇ", mouthEmoji: "🤐", hint: "嘴巴閉著哼鼻子 — 像「媽媽」的開頭", example: "媽" },
+  { zhuyin: "ㄈ", mouthEmoji: "😬", hint: "上面牙齒輕咬下嘴唇 — 像「飛」的開頭", example: "飛" },
+];
+
+let lv1State = null;
+function startLevel(id) {
+  if (id === 1) startLv1();
+  if (id === 2) startLv2();
+  if (id === 3) startLv3();
+}
+
+function startLv1() {
+  lv1State = { stars: 0, target: LEVELS[0].target, questionN: 0 };
+  nextLv1();
+}
+function nextLv1() {
+  if (lv1State.stars >= lv1State.target) return showLevelComplete(1);
+  const correct = LV1_BANK[Math.floor(Math.random() * LV1_BANK.length)];
+  const wrongs = shuffle(LV1_BANK.filter(x => x.zhuyin !== correct.zhuyin)).slice(0, 2);
+  const choices = shuffle([correct, ...wrongs]);
+  lv1State.correctZhuyin = correct.zhuyin;
+
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${lv1State.stars} / ${lv1State.target}</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv1State.stars/lv1State.target*100}%"></div></div>
+    <div class="game-screen">
+      <div class="question-card">
+        <div class="emoji-big">${correct.mouthEmoji}</div>
+        <div class="hint">${correct.hint}</div>
+        <button class="speak-btn" onclick="speak('${correct.zhuyin}，${correct.example}', 0.7)">🔊 聽一次</button>
+      </div>
+      <div class="choices">
+        ${choices.map(c => `
+          <button class="choice" data-zhuyin="${c.zhuyin}" onclick="answerLv1(this,'${c.zhuyin}', event)">
+            ${c.zhuyin}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  // 自動念一次
+  setTimeout(() => speak(`${correct.zhuyin}，${correct.example}`, 0.7), 400);
+}
+
+function answerLv1(el, picked, ev) {
+  const correct = lv1State.correctZhuyin;
+  if (picked === correct) {
+    el.classList.add("correct");
+    lv1State.stars++;
+    state.totalStars++;
+    flyStar(ev.clientX || 0, ev.clientY || 0);
+    speak(`好棒！${correct}`);
+    if (lv1State.stars > (state.levels[1] || 0)) state.levels[1] = lv1State.stars;
+    saveState();
+    setTimeout(nextLv1, 1200);
+  } else {
+    el.classList.add("wrong");
+    speak(`再聽一次：${correct}`, 0.7);
+    setTimeout(() => el.classList.remove("wrong"), 800);
+  }
+}
+
+// =====================================================
+// 關卡 2：聽音找朋友（聲符全集，含易混組）
+// =====================================================
+// 易混組設計：每輪從「易混組」抽，強迫他分辨
+const LV2_CONFUSE_GROUPS = [
+  // Round 1: 差很多的（暖身）
+  ["ㄅ", "ㄉ", "ㄍ"],
+  ["ㄇ", "ㄋ", "ㄌ"],
+  ["ㄈ", "ㄏ", "ㄒ"],
+  // Round 2: 送氣對立
+  ["ㄅ", "ㄆ"],
+  ["ㄉ", "ㄊ"],
+  ["ㄍ", "ㄎ"],
+  ["ㄐ", "ㄑ"],
+  ["ㄗ", "ㄘ"],
+  ["ㄓ", "ㄔ"],
+  // Round 3: 翹舌 vs 平舌（最難）
+  ["ㄓ", "ㄗ"],
+  ["ㄔ", "ㄘ"],
+  ["ㄕ", "ㄙ"],
+  // Round 4: 鼻音 / 邊音 混淆
+  ["ㄋ", "ㄌ"],
+  // Round 5: 顎化音
+  ["ㄐ", "ㄓ"],
+  ["ㄑ", "ㄔ"],
+  ["ㄒ", "ㄕ"],
+];
+
+const LV2_EXAMPLE = {
+  "ㄅ": "爸", "ㄆ": "皮", "ㄇ": "媽", "ㄈ": "飛",
+  "ㄉ": "弟", "ㄊ": "兔", "ㄋ": "牛", "ㄌ": "鹿",
+  "ㄍ": "哥", "ㄎ": "苦", "ㄏ": "猴",
+  "ㄐ": "雞", "ㄑ": "汽", "ㄒ": "西",
+  "ㄓ": "豬", "ㄔ": "車", "ㄕ": "蛇", "ㄖ": "日",
+  "ㄗ": "字", "ㄘ": "醋", "ㄙ": "絲",
+};
+
+let lv2State = null;
+function startLv2() {
+  lv2State = { stars: 0, target: LEVELS[1].target };
+  nextLv2();
+}
+function nextLv2() {
+  if (lv2State.stars >= lv2State.target) return showLevelComplete(2);
+  // 隨機選一組
+  const group = LV2_CONFUSE_GROUPS[Math.floor(Math.random() * LV2_CONFUSE_GROUPS.length)];
+  const correct = group[Math.floor(Math.random() * group.length)];
+  const choices = shuffle([...group]);
+  lv2State.correct = correct;
+
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${lv2State.stars} / ${lv2State.target}</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv2State.stars/lv2State.target*100}%"></div></div>
+    <div class="game-screen">
+      <div class="question-card">
+        <div class="emoji-big">👂</div>
+        <div class="hint">聽聽看，是哪一個？</div>
+        <button class="speak-btn" onclick="speak('${correct}，${LV2_EXAMPLE[correct]||''}', 0.7)">🔊 再聽一次</button>
+      </div>
+      <div class="choices">
+        ${choices.map(c => `
+          <button class="choice" onclick="answerLv2(this,'${c}', event)">${c}</button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  setTimeout(() => speak(`${correct}，${LV2_EXAMPLE[correct]||''}`, 0.7), 500);
+}
+function answerLv2(el, picked, ev) {
+  if (picked === lv2State.correct) {
+    el.classList.add("correct");
+    lv2State.stars++;
+    state.totalStars++;
+    flyStar(ev.clientX || 0, ev.clientY || 0);
+    speak(`答對了！${lv2State.correct}`);
+    if (lv2State.stars > (state.levels[2] || 0)) state.levels[2] = lv2State.stars;
+    saveState();
+    setTimeout(nextLv2, 1200);
+  } else {
+    el.classList.add("wrong");
+    speak(`再聽一次：${lv2State.correct}`, 0.6);
+    setTimeout(() => el.classList.remove("wrong"), 800);
+  }
+}
+
+// =====================================================
+// 關卡 3：拼字小工匠（結合韻）
+// =====================================================
+const LV3_BANK = [
+  // { emoji, word, syllables: [zhuyin per char], blanks: [which char idx to blank, which symbol idx in that char] }
+  // 簡化版：每題給一個字 + 它的全注音，但「結合韻」那一格挖空，要從選項池選對的結合韻
+  { emoji: "🍉", word: "西瓜", chars: [
+      { zhuyin: "ㄒㄧ", blank: "ㄧ", say: "西瓜" },
+      { zhuyin: "ㄍㄨㄚ", blank: "ㄨㄚ", say: "西瓜" },
+    ] },
+  { emoji: "🌙", word: "月亮", chars: [
+      { zhuyin: "ㄩㄝˋ", blank: "ㄩㄝ", say: "月亮" },
+      { zhuyin: "ㄌㄧㄤˋ", blank: "ㄧㄤ", say: "月亮" },
+    ] },
+  { emoji: "🍎", word: "蘋果", chars: [
+      { zhuyin: "ㄆㄧㄥˊ", blank: "ㄧㄥ", say: "蘋果" },
+      { zhuyin: "ㄍㄨㄛˇ", blank: "ㄨㄛ", say: "蘋果" },
+    ] },
+  { emoji: "☂️", word: "雨傘", chars: [
+      { zhuyin: "ㄩˇ", blank: "ㄩ", say: "雨傘" },
+      { zhuyin: "ㄙㄢˇ", blank: "ㄢ", say: "雨傘" },
+    ] },
+  { emoji: "🐟", word: "魚兒", chars: [
+      { zhuyin: "ㄩˊ", blank: "ㄩ", say: "魚兒" },
+      { zhuyin: "ㄦˊ", blank: "ㄦ", say: "魚兒" },
+    ] },
+  { emoji: "🌸", word: "花朵", chars: [
+      { zhuyin: "ㄏㄨㄚ", blank: "ㄨㄚ", say: "花朵" },
+      { zhuyin: "ㄉㄨㄛˇ", blank: "ㄨㄛ", say: "花朵" },
+    ] },
+  { emoji: "🥛", word: "牛奶", chars: [
+      { zhuyin: "ㄋㄧㄡˊ", blank: "ㄧㄡ", say: "牛奶" },
+      { zhuyin: "ㄋㄞˇ", blank: "ㄞ", say: "牛奶" },
+    ] },
+  { emoji: "🎂", word: "蛋糕", chars: [
+      { zhuyin: "ㄉㄢˋ", blank: "ㄢ", say: "蛋糕" },
+      { zhuyin: "ㄍㄠ", blank: "ㄠ", say: "蛋糕" },
+    ] },
+];
+
+// 結合韻 / 韻符 池
+const LV3_POOL = ["ㄚ","ㄛ","ㄜ","ㄝ","ㄞ","ㄟ","ㄠ","ㄡ","ㄢ","ㄣ","ㄤ","ㄥ","ㄦ",
+                  "ㄧ","ㄨ","ㄩ",
+                  "ㄧㄚ","ㄧㄝ","ㄧㄠ","ㄧㄡ","ㄧㄢ","ㄧㄣ","ㄧㄤ","ㄧㄥ",
+                  "ㄨㄚ","ㄨㄛ","ㄨㄞ","ㄨㄟ","ㄨㄢ","ㄨㄣ","ㄨㄤ","ㄨㄥ",
+                  "ㄩㄝ","ㄩㄢ","ㄩㄣ","ㄩㄥ"];
+
+let lv3State = null;
+function startLv3() {
+  lv3State = { stars: 0, target: LEVELS[2].target };
+  nextLv3();
+}
+function nextLv3() {
+  if (lv3State.stars >= lv3State.target) return showLevelComplete(3);
+  const q = LV3_BANK[Math.floor(Math.random() * LV3_BANK.length)];
+  // 隨機選一個字來拼（簡化：一次只拼一個字的韻）
+  const charIdx = Math.floor(Math.random() * q.chars.length);
+  const target = q.chars[charIdx];
+  // 從題庫顯示完整詞，挖空目標字的結合韻
+  lv3State.q = q;
+  lv3State.target = target;
+  // 池選項：正確答案 + 3 個亂的
+  const wrongs = shuffle(LV3_POOL.filter(x => x !== target.blank)).slice(0, 5);
+  const poolItems = shuffle([target.blank, ...wrongs]);
+
+  // 顯示詞 — 用挖空的方式
+  const displayChars = q.chars.map((c, i) => {
+    if (i === charIdx) {
+      return `<span style="color:#ccc">${c.zhuyin.replace(c.blank, "□".repeat(c.blank.length))}</span>`;
+    }
+    return `<span>${c.zhuyin}</span>`;
+  }).join(' ／ ');
+
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <button onclick="renderHome()">← 回地圖</button>
+      <div class="right-group">
+        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
+        <div class="stars">⭐ ${lv3State.stars} / ${LEVELS[2].target}</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv3State.stars/LEVELS[2].target*100}%"></div></div>
+    <div class="game-screen">
+      <div class="question-card">
+        <div class="emoji-big">${q.emoji}</div>
+        <div style="font-size:36px;font-weight:900;color:#d35400;margin:8px 0">${q.word}</div>
+        <div style="font-size:28px;letter-spacing:4px;margin:10px 0">${displayChars}</div>
+        <div class="hint">幫忙找出 □ 裡面的注音</div>
+        <button class="speak-btn" onclick="speak('${target.say}', 0.7)">🔊 聽一次</button>
+      </div>
+      <div class="pool">
+        ${poolItems.map(p => `
+          <button class="pool-item" style="width:auto;padding:0 14px;border-radius:35px"
+            onclick="answerLv3(this,'${p}', event)">${p}</button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  setTimeout(() => speak(target.say, 0.7), 400);
+}
+function answerLv3(el, picked, ev) {
+  if (picked === lv3State.target.blank) {
+    el.classList.add("correct");
+    el.style.background = "#2ecc71";
+    lv3State.stars++;
+    state.totalStars++;
+    flyStar(ev.clientX || 0, ev.clientY || 0);
+    speak(`${lv3State.q.word}！答對了`);
+    if (lv3State.stars > (state.levels[3] || 0)) state.levels[3] = lv3State.stars;
+    saveState();
+    setTimeout(nextLv3, 1300);
+  } else {
+    el.style.background = "#e74c3c";
+    setTimeout(() => { el.style.background = ""; }, 800);
+    speak(`再聽一次：${lv3State.target.say}`, 0.6);
+  }
+}
+
+// =====================================================
+// 過關
+// =====================================================
+function showLevelComplete(levelId) {
+  celebrateBurst();
+  speak("太厲害了！過關了！");
+  const lv = LEVELS.find(l => l.id === levelId);
+  const app = document.getElementById("app");
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="big-emoji">🎉</div>
+      <h2>${lv.title} 過關！</h2>
+      <p>你拿到 ${lv.target} 顆星星 ⭐</p>
+      <button onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
+      <button class="secondary" onclick="this.closest('.modal').remove();startLevel(${levelId})">再玩一次</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// =====================================================
+// 聲音設定面板
+// =====================================================
+function openSettings() {
+  const zhVoices = getZhTwVoices();
+  const sampleText = "ㄅㄚˊ，蘋果，注音真好玩";
+  const hasMaleVoice = zhVoices.some(v => guessGender(v) === "male");
+  const hasFemaleVoice = zhVoices.some(v => guessGender(v) === "female");
+
+  const modal = document.createElement("div");
+  modal.className = "modal settings-modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h2>⚙️ 聲音設定</h2>
+
+      <div class="settings-section">
+        <div class="label">選擇性別（年輕人音色）</div>
+        <div class="gender-toggle">
+          <button class="${settings.gender === 'female' ? 'active' : ''}" onclick="setGender('female')">
+            <span class="em">👧</span>女生
+          </button>
+          <button class="${settings.gender === 'male' ? 'active' : ''}" onclick="setGender('male')">
+            <span class="em">👦</span>男生
+          </button>
+        </div>
+        ${(settings.gender === 'male' && !hasMaleVoice) ? `
+          <div style="font-size:12px;color:#e67e22;margin-top:8px;background:#fff3e0;padding:8px;border-radius:8px;line-height:1.5">
+            ⚠️ 系統未內建男聲台灣口音，目前用「降低音調」模擬男生聲<br>
+            <span style="color:#999">想要真實男聲：Chrome / Edge 用 Google 雲端 voice 可能會多選項</span>
+          </div>` : ''}
+        ${(settings.gender === 'female' && !hasFemaleVoice) ? `
+          <div style="font-size:12px;color:#e67e22;margin-top:8px;background:#fff3e0;padding:8px;border-radius:8px">
+            ⚠️ 系統未找到女聲台灣口音
+          </div>` : ''}
+      </div>
+
+      <div class="settings-section">
+        <div class="label">系統可用的台灣口音（${zhVoices.length} 個）</div>
+        <div class="voice-list">
+          ${zhVoices.length === 0 ? `
+            <div class="voice-empty">
+              ⚠️ 找不到 zh-TW 的聲音<br>
+              <span style="font-size:12px">建議用 Mac 內建 Safari 開啟（系統內建台灣女聲 Mei-Jia）</span>
+            </div>
+          ` : zhVoices.map(v => {
+            const g = guessGender(v);
+            const gIcon = g === "male" ? "👦" : g === "female" ? "👧" : "🎙️";
+            const isActive = (settings.voiceURI === v.voiceURI) ||
+                            (!settings.voiceURI && pickVoice()?.voiceURI === v.voiceURI);
+            return `
+              <div class="voice-item ${isActive ? 'active' : ''}"
+                   onclick="selectVoice('${v.voiceURI.replace(/'/g, "\\'")}')">
+                <div>
+                  <div class="vname">${gIcon} ${v.name}</div>
+                  <div class="vmeta">${v.lang}${v.default ? ' · 系統預設' : ''}</div>
+                </div>
+                <button class="try-btn" onclick="event.stopPropagation();tryVoice('${v.voiceURI.replace(/'/g, "\\'")}')">▶ 試聽</button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="label">試聽目前設定</div>
+        <button class="speak-btn" style="width:100%" onclick="speak('${sampleText}', 0.85)">
+          🔊 用目前的聲音念一次
+        </button>
+        <div style="font-size:12px;color:#999;margin-top:8px;text-align:center">
+          ${settings.gender === 'male' ? '男生年輕音' : '女生年輕音'} · 慢速教學模式
+        </div>
+      </div>
+
+      <button onclick="this.closest('.modal').remove()" style="width:100%">完成</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+function setGender(g) {
+  settings.gender = g;
+  // 切換性別時清除「特定 voice」鎖定，讓系統重新匹配對應性別的 voice
+  settings.voiceURI = null;
+  saveSettings();
+  // 立即試聽 + 重新渲染面板（保持開啟）
+  speak("ㄅ，爸爸", 0.85);
+  const modal = document.querySelector('.settings-modal');
+  if (modal) { modal.remove(); openSettings(); }
+}
+
+function selectVoice(voiceURI) {
+  settings.voiceURI = voiceURI;
+  // 跟著 guessGender 同步更新偏好性別
+  const v = window.speechSynthesis.getVoices().find(x => x.voiceURI === voiceURI);
+  if (v) {
+    const g = guessGender(v);
+    if (g) settings.gender = g;
+  }
+  saveSettings();
+  const modal = document.querySelector('.settings-modal');
+  if (modal) { modal.remove(); openSettings(); }
+}
+
+function tryVoice(voiceURI) {
+  const v = window.speechSynthesis.getVoices().find(x => x.voiceURI === voiceURI);
+  if (!v) return;
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance("ㄚˊ，蘋果，注音真好玩");
+  u.lang = "zh-TW";
+  u.voice = v;
+  u.rate = 0.85;
+  const g = guessGender(v);
+  u.pitch = g === "male" ? 1.05 : 1.3;
+  speechSynthesis.speak(u);
+}
+
+// 啟動
+window.startLevel = startLevel;
+window.answerLv1 = answerLv1;
+window.answerLv2 = answerLv2;
+window.answerLv3 = answerLv3;
+window.renderHome = renderHome;
+window.resetProgress = resetProgress;
+window.openSettings = openSettings;
+window.setGender = setGender;
+window.selectVoice = selectVoice;
+window.tryVoice = tryVoice;
+window.renderAlphabet = renderAlphabet;
+window.playZhuyinCell = playZhuyinCell;
+renderHome();
+</script>
+</body>
+</html>
