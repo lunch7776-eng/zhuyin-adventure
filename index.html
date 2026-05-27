@@ -663,8 +663,8 @@
   .explore-stage {
     position: relative;
     width: 100%;
-    max-width: 800px;
-    height: min(60vh, 500px);
+    max-width: min(95vw, 1200px);
+    height: min(70vh, 720px);
     background: linear-gradient(170deg, #ddeaf3 0%, #f4efe5 100%);
     border-radius: 24px;
     overflow: hidden;
@@ -710,15 +710,15 @@
 
   .explore-zhuyin {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: clamp(56px, 7vw, 84px);
+    height: clamp(56px, 7vw, 84px);
     background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), rgba(255,255,255,.45) 36%, rgba(255,255,255,.22) 64%, rgba(255,255,255,.18) 100%);
-    border: 1px solid rgba(255,255,255,.8);
+    border: 4px solid rgba(255,255,255,.8);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: clamp(28px, 3.5vw, 40px);
     font-weight: 900;
     color: #2b3a56;
     box-shadow: 0 0 16px rgba(255,206,134,.4), 0 12px 18px rgba(28, 38, 56, .22), inset 0 2px 10px rgba(255,255,255,.5);
@@ -729,7 +729,7 @@
     user-select: none;
     z-index: 2;
   }
-  .explore-zhuyin.combined { font-size: 17px; }
+  .explore-zhuyin.combined { font-size: clamp(18px, 2.2vw, 24px); }
   .explore-zhuyin.collected {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
@@ -741,8 +741,8 @@
 
   .explore-robot {
     position: absolute;
-    width: 80px;
-    height: 100px;
+    width: clamp(80px, 9vw, 120px);
+    height: clamp(100px, 11.5vw, 150px);
     pointer-events: none;
     transition: left 0.5s cubic-bezier(.2,.8,.2,1), top 0.5s cubic-bezier(.2,.8,.2,1);
     z-index: 5;
@@ -814,7 +814,7 @@
     border-bottom-color: #fffaf2;
   }
   .explore-popup .ep-zhuyin {
-    font-size: 48px;
+    font-size: clamp(48px, 5vw, 64px);
     font-weight: 900;
     color: #202d45;
     line-height: 1;
@@ -883,9 +883,6 @@
 
   @media (max-width: 600px) {
     .explore-stage { height: 55vh; }
-    .explore-zhuyin { width: 48px; height: 48px; font-size: 24px; }
-    .explore-zhuyin.combined { font-size: 14px; }
-    .explore-robot { width: 64px; height: 84px; }
   }
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
@@ -1597,6 +1594,13 @@ function startRobotAdventure() {
   startRobotExplore();
 }
 
+function getExploreMapSize() {
+  const vw = window.innerWidth;
+  if (vw >= 1024) return { W: 1200, H: 720 };
+  if (vw >= 600) return { W: 900, H: 580 };
+  return { W: 700, H: 460 };
+}
+
 function startRobotExplore() {
   const stage = state.robot.stage;
   const stageSet = getRobotStageSet(stage);
@@ -1611,7 +1615,7 @@ function startRobotExplore() {
   const remaining = stageSet.filter(z => !collected.includes(z));
 
   // 用「假設」的地圖尺寸先 layout，render 後再校正到實際尺寸
-  const W = 800, H = 480;
+  const { W, H } = getExploreMapSize();
   const positions = placeZhuyinOnMap(remaining, W, H);
 
   exploreState = {
@@ -1697,8 +1701,8 @@ function moveRobotTo(x, y) {
   const old = exploreState.robot;
   const dx = x - old.x, dy = y - old.y;
   const dist = Math.hypot(dx, dy);
-  // 速度：300 px/s（約 1.6 秒走滿地圖對角）
-  const duration = Math.max(220, Math.min(1800, dist / 300 * 1000));
+  const speed = Math.max(300, exploreState.mapW * 0.4);
+  const duration = Math.max(220, Math.min(2000, dist / speed * 1000));
 
   exploreState.robot = { x, y };
   exploreState.facing = dx >= 0 ? 1 : -1;
@@ -1720,7 +1724,7 @@ function checkNearestZhuyin() {
   if (_exploreInteracting) return;
   const { stage, positions, robot } = exploreState;
   const collected = state.robot.collected[stage];
-  const TRIGGER = 70;
+  const TRIGGER = Math.max(70, exploreState.mapW * 0.075);
   let closest = null, minD = TRIGGER;
   for (const p of positions) {
     if (collected.includes(p.z)) continue;
