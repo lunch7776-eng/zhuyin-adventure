@@ -793,14 +793,13 @@
     box-shadow: var(--shadow-pop);
     z-index: 50;
     text-align: center;
-    transform: translate(-50%, -100%);
     pointer-events: auto;
     min-width: 220px;
     animation: popupIn 0.35s cubic-bezier(.2,.86,.22,1.08);
   }
   @keyframes popupIn {
-    0%   { opacity: 0; transform: translate(-50%, -85%) scale(0.6); }
-    100% { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+    0%   { opacity: 0; transform: scale(0.6); }
+    100% { opacity: 1; transform: scale(1); }
   }
   .explore-popup::after {
     content: "";
@@ -811,14 +810,14 @@
     border: 10px solid transparent;
     border-top-color: #fffaf2;
   }
-  .explore-popup.flip-down {
-    transform: translate(-50%, 0);
-  }
   .explore-popup.flip-down::after {
     bottom: auto;
     top: -10px;
     border-top-color: transparent;
     border-bottom-color: #fffaf2;
+  }
+  .explore-popup.no-arrow::after {
+    display: none;
   }
   .explore-popup .ep-zhuyin {
     font-size: clamp(48px, 5vw, 64px);
@@ -1856,30 +1855,19 @@ function showExplorePopup(p) {
   const example = item ? item.ex : "";
   const emoji = item ? (item.emo || "") : "";
 
-  // 先 speak 一次
   speak(getRobotSpeakText(stage, p.z));
 
   const stageEl = document.getElementById("exploreStage");
-  // 拿掉舊 popup（防重複）
   stageEl.querySelectorAll(".explore-popup").forEach(el => el.remove());
 
+  // 1) 先建立 popup 並隱藏，量測實際尺寸後再定位
   const popup = document.createElement("div");
   popup.className = "explore-popup";
-  // popup 位置：機器人上方；若機器人靠頂，改 popup 顯示在下方（翻轉箭頭）
-  const popupX = Math.max(18, Math.min(82, exploreState.robot.x));
-  let popupY;
-  let flipDown = false;
-  if (exploreState.robot.y < 38) {
-    // 太靠上 → popup 顯示在機器人下方
-    popupY = exploreState.robot.y + 22;
-    flipDown = true;
-  } else {
-    popupY = Math.max(20, exploreState.robot.y - 15);
-  }
-  popup.style.left = popupX + "%";
-  popup.style.top = popupY + "%";
-
-  if (flipDown) popup.classList.add("flip-down");
+  popup.style.visibility = "hidden";
+  popup.style.position = "absolute";
+  popup.style.transform = "none";
+  popup.style.left = "0";
+  popup.style.top = "0";
   popup.innerHTML = `
     <div class="ep-zhuyin ${isCombined ? 'combined' : ''}">${p.z}</div>
     <div class="ep-example">${emoji} ${example}</div>
@@ -1887,6 +1875,51 @@ function showExplorePopup(p) {
     <button class="ep-collect" onclick="collectExploreZhuyin('${p.z}')">✓ 我會念了</button>
   `;
   stageEl.appendChild(popup);
+
+  // 2) 量測 stage 與 popup 尺寸（px）
+  const sRect = stageEl.getBoundingClientRect();
+  const pRect = popup.getBoundingClientRect();
+  const pW = pRect.width;
+  const pH = pRect.height;
+
+  // 機器人目前 % 座標轉成 stage 內 px 座標
+  const robotPx = (exploreState.robot.x / 100) * sRect.width;
+  const robotPy = (exploreState.robot.y / 100) * sRect.height;
+
+  const ROBOT_H_APPROX = 130;
+  const GAP = 16;
+  const EDGE_MARGIN = 12;
+
+  // 3) 垂直 placement：預設 above，不夠則 below，再不夠 center
+  let py;
+  let placement = "above";
+  const robotTop = robotPy - ROBOT_H_APPROX / 2;
+  const robotBottom = robotPy + ROBOT_H_APPROX / 2;
+  const tentativeTopAbove = robotTop - GAP - pH;
+  if (tentativeTopAbove >= EDGE_MARGIN) {
+    py = tentativeTopAbove;
+    placement = "above";
+  } else {
+    const tentativeTopBelow = robotBottom + GAP;
+    if (tentativeTopBelow + pH <= sRect.height - EDGE_MARGIN) {
+      py = tentativeTopBelow;
+      placement = "below";
+    } else {
+      py = Math.max(EDGE_MARGIN, (sRect.height - pH) / 2);
+      placement = "center";
+    }
+  }
+
+  // 4) 水平 clamp：以機器人中心對齊 popup，但不出左右邊界
+  let px = robotPx - pW / 2;
+  px = Math.max(EDGE_MARGIN, Math.min(sRect.width - pW - EDGE_MARGIN, px));
+
+  // 5) 套用最終位置並顯示
+  popup.style.left = px + "px";
+  popup.style.top = py + "px";
+  popup.style.visibility = "";
+  popup.classList.toggle("flip-down", placement === "below");
+  if (placement === "center") popup.classList.add("no-arrow");
 }
 
 function collectExploreZhuyin(z) {
