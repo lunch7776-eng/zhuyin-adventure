@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>注音大冒險 — ㄅㄆㄇ 闖關</title>
 <style>
+  @font-face {
+    font-family: 'OpenHuninn';
+    src: url('assets/fonts/jf-openhuninn.woff2') format('woff2'),
+         url('assets/fonts/jf-openhuninn.ttf') format('truetype');
+    font-display: swap;
+    font-weight: 400;
+  }
   :root {
     --bg-main: #faf7f2;
     --text-main: #1a1f2e;
@@ -27,7 +34,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%;
-    font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    font-family: 'OpenHuninn', "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
     background:
       radial-gradient(circle at 12% 12%, rgba(255, 176, 102, 0.22) 0%, transparent 34%),
       radial-gradient(circle at 80% 0%, rgba(183, 212, 232, 0.42) 0%, transparent 42%),
@@ -1013,6 +1020,13 @@
   /* 結合韻的注音字較長 */
   .zh-cell.combined .zc-zhuyin { font-size: 22px; }
 
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   @media (max-width: 600px) {
     .zhuyin-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
     .zh-cell .zc-zhuyin { font-size: 26px; }
@@ -1031,6 +1045,9 @@
     .explore-popup { min-width: 190px; padding: 14px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -1285,6 +1302,109 @@ function celebrateBurst() {
     }, i * 80);
   }
 }
+
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function playTone(freq, duration = 0.15, type = "triangle", volume = 0.15, delay = 0) {
+  try {
+    const ctx = getAudioCtx();
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(volume, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + duration);
+  } catch (e) { /* ignore */ }
+}
+
+function playSuccessSound() {
+  playTone(523, 0.12, "triangle", 0.15, 0);
+  playTone(659, 0.12, "triangle", 0.15, 0.08);
+  playTone(784, 0.18, "triangle", 0.15, 0.16);
+}
+
+function playWrongSound() {
+  playTone(392, 0.15, "triangle", 0.1, 0);
+  playTone(330, 0.2, "triangle", 0.1, 0.1);
+}
+
+function playTickSound() {
+  playTone(880, 0.04, "sine", 0.05);
+}
+
+function buttonBounce(el) {
+  const _prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (_prefersReducedMotion) return;
+  if (!window.gsap || !el) return;
+  gsap.killTweensOf(el);
+  gsap.timeline()
+    .to(el, { scale: 0.92, duration: 0.08, ease: "power2.out" })
+    .to(el, { scale: 1.04, duration: 0.14, ease: "back.out(2.5)" })
+    .to(el, { scale: 1.0, duration: 0.1, ease: "power2.out" });
+}
+
+function celebrateCorrect(el = null, options = {}) {
+  const _prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (window.confetti && !_prefersReducedMotion) {
+    let origin = { x: 0.5, y: 0.5 };
+    if (el) {
+      const r = el.getBoundingClientRect();
+      origin = {
+        x: (r.left + r.width / 2) / window.innerWidth,
+        y: (r.top + r.height / 2) / window.innerHeight,
+      };
+    }
+    confetti({
+      particleCount: options.particles || 60,
+      spread: 70,
+      startVelocity: 35,
+      origin,
+      colors: ['#FF8C42', '#FFB066', '#FFE7B5', '#FFFFFF', '#FFD78A'],
+      ticks: 120,
+    });
+  }
+  const robot = document.getElementById("exploreRobot") || document.getElementById("robotAvatar");
+  if (robot && window.gsap && !_prefersReducedMotion) {
+    gsap.killTweensOf(robot);
+    gsap.fromTo(robot,
+      { scale: 1, y: 0 },
+      { scale: 1.08, y: -20, duration: 0.18, yoyo: true, repeat: 1, ease: "back.out(2)" }
+    );
+  }
+  playSuccessSound();
+  if (navigator.vibrate) navigator.vibrate(40);
+}
+
+function celebrateWrong(el = null) {
+  const _prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (el && window.gsap && !_prefersReducedMotion) {
+    gsap.killTweensOf(el);
+    gsap.timeline()
+      .to(el, { x: -8, duration: 0.05 })
+      .to(el, { x: 8, duration: 0.08 })
+      .to(el, { x: -5, duration: 0.06 })
+      .to(el, { x: 0, duration: 0.05 });
+  }
+  playWrongSound();
+  if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+}
+
+document.addEventListener("pointerdown", (e) => {
+  const btn = e.target.closest("button, .level-card, .robot-entry, .alphabet-entry, .zh-cell, .explore-zhuyin, .float-z, .pool-item, .choice, .robot-choice, .ep-collect, .voice-item .try-btn");
+  if (btn) {
+    buttonBounce(btn);
+    playTickSound();
+  }
+});
 
 // =====================================================
 // 全部注音表（21 聲符 + 16 韻符 + 21 結合韻）
@@ -1791,6 +1911,7 @@ function collectExploreZhuyin(z) {
   }
   // 視覺：注音縮成消失
   const zEl = document.querySelector(`.explore-zhuyin[data-z="${z}"]`);
+  celebrateCorrect(zEl);
   if (zEl) zEl.classList.add("collected");
   // popup 關閉
   document.querySelectorAll(".explore-popup").forEach(el => el.remove());
@@ -1890,6 +2011,7 @@ function pickRobotChoice(el, picked) {
   const target = robotRoundState.target;
   if (picked === target) {
     robotRoundState.locked = true;
+    celebrateCorrect(el);
     el.classList.add("collecting");
     animateRobotMood("happy");
     if (!state.robot.collected[robotRoundState.stage].includes(target)) {
@@ -1899,6 +2021,7 @@ function pickRobotChoice(el, picked) {
     speak(`好棒！${target}`, 0.7);
     setTimeout(nextRobotRound, 800);
   } else {
+    celebrateWrong(el);
     el.classList.add("wrong");
     animateRobotMood("sad");
     speak(`再聽一次：${getRobotSpeakText(robotRoundState.stage, target)}`, 0.7);
@@ -2062,6 +2185,7 @@ function nextLv1() {
 function answerLv1(el, picked, ev) {
   const correct = lv1State.correctZhuyin;
   if (picked === correct) {
+    celebrateCorrect(el);
     el.classList.add("correct");
     lv1State.stars++;
     state.totalStars++;
@@ -2071,6 +2195,7 @@ function answerLv1(el, picked, ev) {
     saveState();
     setTimeout(nextLv1, 1200);
   } else {
+    celebrateWrong(el);
     el.classList.add("wrong");
     speak(`再聽一次：${correct}`, 0.7);
     setTimeout(() => el.classList.remove("wrong"), 800);
@@ -2154,6 +2279,7 @@ function nextLv2() {
 }
 function answerLv2(el, picked, ev) {
   if (picked === lv2State.correct) {
+    celebrateCorrect(el);
     el.classList.add("correct");
     lv2State.stars++;
     state.totalStars++;
@@ -2163,6 +2289,7 @@ function answerLv2(el, picked, ev) {
     saveState();
     setTimeout(nextLv2, 1200);
   } else {
+    celebrateWrong(el);
     el.classList.add("wrong");
     speak(`再聽一次：${lv2State.correct}`, 0.6);
     setTimeout(() => el.classList.remove("wrong"), 800);
@@ -2272,6 +2399,7 @@ function nextLv3() {
 }
 function answerLv3(el, picked, ev) {
   if (picked === lv3State.target.blank) {
+    celebrateCorrect(el);
     el.classList.add("correct");
     el.style.background = "#2ecc71";
     lv3State.stars++;
@@ -2282,6 +2410,7 @@ function answerLv3(el, picked, ev) {
     saveState();
     setTimeout(nextLv3, 1300);
   } else {
+    celebrateWrong(el);
     el.style.background = "#e74c3c";
     setTimeout(() => { el.style.background = ""; }, 800);
     speak(`再聽一次：${lv3State.target.say}`, 0.6);
