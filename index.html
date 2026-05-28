@@ -1698,6 +1698,12 @@ function moveRobotTo(x, y) {
   if (_exploreInteracting) return;
   const r = document.getElementById("exploreRobot");
   if (!r) return;
+  // 邊界 clamp — 不要讓機器人跑出地圖
+  const MARGIN_X = 50;
+  const MARGIN_TOP = 90;    // 機器人高，預留 popup + 頭頂空間
+  const MARGIN_BOT = 30;
+  x = Math.max(MARGIN_X, Math.min(exploreState.mapW - MARGIN_X, x));
+  y = Math.max(MARGIN_TOP, Math.min(exploreState.mapH - MARGIN_BOT, y));
   const old = exploreState.robot;
   const dx = x - old.x, dy = y - old.y;
   const dist = Math.hypot(dx, dy);
