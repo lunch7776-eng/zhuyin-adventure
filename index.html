@@ -2066,7 +2066,7 @@ function showRobotStageComplete() {
       ${renderRobotSvg("happy")}
       <h2>${getRobotStageLabel(stage)}收集完成！</h2>
       <p>${nextStage ? "BOBO 升級成功，準備前往下一階段！" : "全部收集完成，BOBO 變成最強機器人！"}</p>
-      ${nextStage ? `<button onclick="this.closest('.modal').remove();nextRobotRound()">下一階段</button>` : `<button onclick="this.closest('.modal').remove();renderHome()">回首頁</button>`}
+      ${nextStage ? `<button onclick="this.closest('.modal').remove();startRobotExplore()">下一階段</button>` : `<button onclick="this.closest('.modal').remove();renderHome()">回首頁</button>`}
       <button class="secondary" onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
     </div>
   `;
