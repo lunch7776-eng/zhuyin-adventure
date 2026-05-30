@@ -802,6 +802,41 @@
     .adv-dock .dk-actions { order:3; flex-basis:100%; justify-content:center; }
   }
 
+  /* 學→考→精熟 小考 UI */
+  .adv-dock.quiz { flex-direction: column; align-items: stretch; gap: 12px; text-align:center; }
+  .qz-prompt { font-size: clamp(17px,2.2vw,21px); font-weight:800; color:#33415c; }
+  .qz-prompt b { color:#a45d2b; }
+  .qz-choices { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .qz-choice {
+    min-width: clamp(76px,9vw,92px); min-height: clamp(76px,9vw,92px);
+    font-size: clamp(32px,4.4vw,46px); font-weight:900; color:#2b3a56;
+    background: linear-gradient(165deg,#fff,#fdf3e3); border:3px solid rgba(255,255,255,.92);
+    border-radius:20px; cursor:pointer;
+    box-shadow: 0 10px 20px rgba(28,38,56,.16);
+    transition: transform .12s, box-shadow .25s, background .3s, opacity .3s;
+  }
+  .adv-dock.combined .qz-choice { font-size: clamp(22px,2.8vw,30px); }
+  .qz-choice:active { transform: translateY(2px) scale(.96); }
+  .qz-choice.qz-wrong { background:#fbe2dc; border-color:#e9a99a; opacity:.5; }
+  .qz-choice.qz-reveal {
+    background:#e9fbe6; border-color:#7fd486;
+    box-shadow:0 0 0 4px rgba(120,210,130,.5), 0 10px 20px rgba(28,38,56,.16);
+    animation: advStPulse 1s ease-in-out infinite;
+  }
+  .qz-combine { display:flex; align-items:center; justify-content:center; gap:12px; margin: 2px 0; }
+  .qz-medial, .qz-slot, .qz-result {
+    font-size: clamp(30px,4vw,44px); font-weight:900; color:#2b3a56;
+    background:linear-gradient(165deg,#fff,#fdf3e3); border:3px solid rgba(255,255,255,.92);
+    border-radius:18px; padding:6px 18px; box-shadow:0 8px 16px rgba(28,38,56,.16);
+  }
+  .qz-slot { color:#c0c8d4; min-width:48px; }
+  .qz-plus { font-size: clamp(24px,3vw,32px); color:#a45d2b; font-weight:900; }
+  .qz-result { color:#a45d2b; animation: advDockIn .4s ease; }
+  .qz-replay { align-self:center; }
+  .dk-mic { background:#e7f0ff !important; color:#3a6cb0 !important; box-shadow:0 6px 14px rgba(58,108,176,.16) !important; }
+  .adv-station.mastered .st-flag { font-size:26px; }
+  .adv-station.mastered .st-flag::after { content:"⭐"; position:absolute; left:15px; top:-3px; font-size:14px; }
+
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-14px); }
@@ -988,11 +1023,12 @@ function loadState() {
           initials: ((base.robot && base.robot.collected && base.robot.collected.initials) || []).filter(Boolean),
           finals: ((base.robot && base.robot.collected && base.robot.collected.finals) || []).filter(Boolean),
           combined: ((base.robot && base.robot.collected && base.robot.collected.combined) || []).filter(Boolean),
-        }
+        },
+        mastery: (base.robot && base.robot.mastery) || { initials: {}, finals: {}, combined: {} }
       }
     };
   } catch {
-    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] } } };
+    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } } };
   }
 }
 function saveState() {
@@ -1464,6 +1500,30 @@ const ROBOT_STAGE_META = {
   combined: { title: "Stage 3：收集結合韻", list: () => ZHUYIN_TABLE.combined },
 };
 
+// 易混組（聲符辨音用的干擾項）
+const CONFUSION = {
+  "ㄅ":["ㄆ","ㄉ"], "ㄆ":["ㄅ","ㄊ"], "ㄇ":["ㄋ","ㄈ"], "ㄈ":["ㄏ","ㄇ"],
+  "ㄉ":["ㄊ","ㄅ"], "ㄊ":["ㄉ","ㄆ"], "ㄋ":["ㄌ","ㄇ"], "ㄌ":["ㄋ","ㄖ"],
+  "ㄍ":["ㄎ","ㄏ"], "ㄎ":["ㄍ","ㄏ"], "ㄏ":["ㄈ","ㄎ"],
+  "ㄐ":["ㄑ","ㄓ"], "ㄑ":["ㄐ","ㄔ"], "ㄒ":["ㄕ","ㄙ"],
+  "ㄓ":["ㄗ","ㄐ"], "ㄔ":["ㄘ","ㄑ"], "ㄕ":["ㄙ","ㄒ"], "ㄖ":["ㄌ","ㄕ"],
+  "ㄗ":["ㄓ","ㄘ"], "ㄘ":["ㄔ","ㄗ"], "ㄙ":["ㄕ","ㄒ"]
+};
+const ALL_FINALS = ["ㄚ","ㄛ","ㄜ","ㄝ","ㄞ","ㄟ","ㄠ","ㄡ","ㄢ","ㄣ","ㄤ","ㄥ","ㄦ"];
+function advDistractors(stage, z, n) {
+  let pool = [];
+  if (stage === "initials") {
+    pool = (CONFUSION[z] || []).slice();
+    const others = ROBOT_STAGE_META.initials.list().map(s => s.z).filter(x => x !== z && !pool.includes(x));
+    const sh = shuffle(others);
+    while (pool.length < n && sh.length) pool.push(sh.shift());
+  } else {
+    const others = ROBOT_STAGE_META.finals.list().map(s => s.z).filter(x => x !== z);
+    pool = shuffle(others).slice(0, n);
+  }
+  return pool.slice(0, n);
+}
+
 let robotRoundState = null;
 
 function getRobotStageSet(stage) {
@@ -1742,6 +1802,8 @@ function advApplyCamera(animate, dur) {
 }
 
 function advRenderDock(idx) {
+  // 初遇 phase：聽 + 換你念 + 考考我
+  advState.phase = "encounter";
   const { stage, symbols } = advState;
   const sym = symbols[idx];
   const dock = document.getElementById("advDock");
@@ -1751,11 +1813,12 @@ function advRenderDock(idx) {
     '<div class="dk-symbol">' + sym.z + '</div>' +
     '<div class="dk-mid">' +
       '<div class="dk-word">' + (sym.emo || "") + ' ' + sym.ex + '</div>' +
-      '<div class="dk-hint">聽 BOBO 念 → 你跟著念一次 → 按「我會念了」</div>' +
+      '<div class="dk-hint">聽 BOBO 念，跟著念一次，準備好就考考你！</div>' +
     '</div>' +
     '<div class="dk-actions">' +
       '<button class="dk-replay" onclick="advReplay()">🔊 再聽</button>' +
-      '<button class="dk-go" onclick="advCollect()">✓ 我會念了</button>' +
+      '<button class="dk-mic" id="dkMic" onclick="advRecord()">🎤 換你念</button>' +
+      '<button class="dk-go" onclick="advStartQuiz()">🎧 考考我</button>' +
     '</div>';
 }
 
@@ -1766,34 +1829,204 @@ function advReplay() {
 
 function advTapStation(i) {
   if (advState.walking) return;
-  const s = advState.symbols[i];
-  speak(getRobotSpeakText(advState.stage, s.z), 0.72);
+  if (advState.phase === "quiz" || advState.phase === "review") return;
+  speak(getRobotSpeakText(advState.stage, advState.symbols[i].z), 0.72);
 }
 
-function advCollect() {
-  if (advState.walking) return;
-  const { stage, symbols } = advState;
-  const idx = advTargetIndex();
-  const sym = symbols[idx];
+function isReview() { return advState.phase === "review"; }
+function addReview(z) {
+  if (!advState.reviewBag) advState.reviewBag = [];
+  if (!advState.reviewBag.includes(z)) advState.reviewBag.push(z);
+}
 
-  if (!state.robot.collected[stage].includes(sym.z)) {
-    state.robot.collected[stage].push(sym.z);
-    saveState();
+// ---- 小考 ----
+function advStartQuiz(forceIdx) {
+  if (advState.walking) return;
+  const idx = (forceIdx === undefined || forceIdx === null) ? advTargetIndex() : forceIdx;
+  if (advState.phase !== "review") advState.phase = "quiz";
+  advState.quizMissed = false;
+  const { stage, symbols } = advState;
+  const sym = symbols[idx];
+  const dock = document.getElementById("advDock");
+  if (!dock) return;
+
+  if (stage === "combined") {
+    const medial = sym.z[0];
+    const correctRest = sym.z.slice(1);
+    const distract = shuffle(ALL_FINALS.filter(f => f !== correctRest)).slice(0, 2);
+    const choices = shuffle([correctRest, ...distract]);
+    advState.quiz = { idx, type: "combine", correct: correctRest, medial, target: sym.z };
+    dock.className = "adv-dock quiz combined";
+    dock.innerHTML =
+      '<div class="qz-prompt">幫 <b>' + medial + '</b> 找朋友，合起來念「' + sym.ex + '」</div>' +
+      '<div class="qz-combine"><span class="qz-medial">' + medial + '</span><span class="qz-plus">＋</span><span class="qz-slot" id="qzSlot">?</span></div>' +
+      '<div class="qz-choices">' +
+        choices.map(c => '<button class="qz-choice" onclick="advCombine(\'' + c + '\')">' + c + '</button>').join("") +
+      '</div>' +
+      '<button class="dk-replay qz-replay" onclick="advReplayTarget()">🔊 再聽合起來的音</button>';
+    setTimeout(() => speak(getRobotSpeakText(stage, sym.z), 0.7), 260);
+  } else {
+    const distract = advDistractors(stage, sym.z, 2);
+    const choices = shuffle([sym.z, ...distract]);
+    advState.quiz = { idx, type: "pick", correct: sym.z };
+    dock.className = "adv-dock quiz";
+    dock.innerHTML =
+      '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>' +
+      '<div class="qz-choices">' +
+        choices.map(c => '<button class="qz-choice" data-z="' + c + '" onclick="advAnswer(\'' + c + '\')">' + c + '</button>').join("") +
+      '</div>' +
+      '<button class="dk-replay qz-replay" onclick="advReplayTarget()">🔊 再聽一次</button>';
+    setTimeout(() => speak(getRobotSpeakText(stage, sym.z), 0.7), 260);
+  }
+}
+
+function advReplayTarget() {
+  if (!advState.quiz) return;
+  const idx = advState.quiz.idx;
+  speak(getRobotSpeakText(advState.stage, advState.symbols[idx].z), 0.7);
+}
+
+function advAnswer(picked) {
+  if (!advState.quiz || advState.quiz.type !== "pick") return;
+  const q = advState.quiz;
+  const btn = document.querySelector('.qz-choice[data-z="' + picked + '"]');
+  if (picked === q.correct) {
+    if (btn) btn.classList.add("qz-reveal");
+    celebrateCorrect(btn);
+    advState.quiz = null;
+    advQuizCorrect(q.idx, advState.quizMissed);
+  } else {
+    advState.quizMissed = true;
+    if (!isReview()) addReview(q.correct);
+    celebrateWrong(btn);
+    if (btn) { btn.disabled = true; btn.classList.add("qz-wrong"); }
+    const cBtn = document.querySelector('.qz-choice[data-z="' + q.correct + '"]');
+    if (cBtn) cBtn.classList.add("qz-reveal");
+    speak("再聽一次：" + getRobotSpeakText(advState.stage, advState.symbols[q.idx].z), 0.68);
+  }
+}
+
+function advCombine(part) {
+  if (!advState.quiz || advState.quiz.type !== "combine") return;
+  const q = advState.quiz;
+  const btns = Array.from(document.querySelectorAll(".qz-choice"));
+  if (part === q.correct) {
+    const slot = document.getElementById("qzSlot");
+    if (slot) slot.textContent = part;
+    celebrateCorrect(slot);
+    advState.quiz = null;
+    setTimeout(() => {
+      const combineEl = document.querySelector(".qz-combine");
+      if (combineEl) combineEl.innerHTML = '<span class="qz-result">' + q.target + '</span>';
+      speak(getRobotSpeakText("combined", q.target), 0.7);
+    }, 280);
+    setTimeout(() => advQuizCorrect(q.idx, advState.quizMissed), 1150);
+  } else {
+    advState.quizMissed = true;
+    if (!isReview()) addReview(q.target);
+    const wrongBtn = btns.find(b => b.textContent === part);
+    celebrateWrong(wrongBtn);
+    if (wrongBtn) { wrongBtn.disabled = true; wrongBtn.classList.add("qz-wrong"); }
+    const cBtn = btns.find(b => b.textContent === q.correct);
+    if (cBtn) cBtn.classList.add("qz-reveal");
+    speak("再聽一次：" + getRobotSpeakText("combined", q.target), 0.68);
+  }
+}
+
+function advQuizCorrect(idx, wasMissed) {
+  const { stage, symbols } = advState;
+  const sym = symbols[idx];
+  if (!state.robot.mastery) state.robot.mastery = { initials: {}, finals: {}, combined: {} };
+  const m = state.robot.mastery[stage] || (state.robot.mastery[stage] = {});
+  if (!wasMissed) m[sym.z] = (m[sym.z] || 0) + 1;  // 只有第一次就答對才算「精熟分」
+  if (!state.robot.collected[stage].includes(sym.z)) state.robot.collected[stage].push(sym.z);
+  saveState();
+
+  if (isReview()) {
+    if (!wasMissed) {} // review correct also could bump, but keep simple
+    m[sym.z] = (m[sym.z] || 0) + 1;
+    playRobotAnim("happy");
+    speak("答對了！" + sym.z);
+    advState.reviewBag = (advState.reviewBag || []).filter(z => z !== sym.z);
+    setTimeout(advNextReview, 950);
+    return;
   }
 
-  const stEl = document.querySelector('.adv-station[data-i="' + idx + '"]');
-  celebrateCorrect(stEl);
   playRobotAnim("happy");
   speak("好棒！" + sym.z);
-  if (stEl) { stEl.classList.remove("current", "future"); stEl.classList.add("done"); }
+  const stEl = document.querySelector('.adv-station[data-i="' + idx + '"]');
+  if (stEl) {
+    stEl.classList.remove("current", "future");
+    stEl.classList.add("done");
+    if ((m[sym.z] || 0) >= 2) stEl.classList.add("mastered");
+  }
   advUpdateProgress();
 
   if (state.robot.collected[stage].length >= symbols.length) {
-    setTimeout(showRobotStageComplete, 1050);
+    setTimeout(advAfterZone, 1050);
+  } else {
+    const next = advTargetIndex();
+    setTimeout(() => advWalkTo(next, true), 820);
+  }
+}
+
+// ---- 複習關（間隔複習答錯的）----
+function advAfterZone() {
+  if (advState.reviewBag && advState.reviewBag.length > 0) {
+    advStartReview();
+  } else {
+    showRobotStageComplete();
+  }
+}
+
+function advStartReview() {
+  advState.phase = "review";
+  celebrateBurst();
+  const banner = document.querySelector(".adv-banner .azone");
+  if (banner) banner.textContent = "🔁 複習時間！";
+  speak("我們再玩一次剛剛比較難的！");
+  setTimeout(advNextReview, 800);
+}
+
+function advNextReview() {
+  if (!advState.reviewBag || advState.reviewBag.length === 0) {
+    const banner = document.querySelector(".adv-banner .azone");
+    if (banner) banner.textContent = EXPLORE_ZONE_META[advState.stage].name;
+    setTimeout(showRobotStageComplete, 500);
     return;
   }
-  const next = advTargetIndex();
-  setTimeout(() => advWalkTo(next, true), 720);
+  const z = advState.reviewBag[0];
+  const idx = advState.symbols.findIndex(s => s.z === z);
+  if (idx < 0) { advState.reviewBag.shift(); return advNextReview(); }
+  advState.phase = "review";
+  advStartQuiz(idx);
+}
+
+// ---- 🎤 換你念（錄音回放，非評分、不擋進度）----
+let _advRec = null, _advChunks = [];
+async function advRecord() {
+  const btn = document.getElementById("dkMic");
+  if (!navigator.mediaDevices || !window.MediaRecorder) { if (btn) btn.textContent = "（不能錄音）"; return; }
+  if (_advRec && _advRec.state === "recording") return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _advChunks = [];
+    _advRec = new MediaRecorder(stream);
+    _advRec.ondataavailable = e => { if (e.data.size) _advChunks.push(e.data); };
+    _advRec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(_advChunks, { type: (_advChunks[0] && _advChunks[0].type) || "audio/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = new Audio(url);
+      if (btn) { btn.textContent = "🔁 聽我念的"; btn.onclick = () => a.play(); }
+      a.play();
+    };
+    if (btn) btn.textContent = "🔴 錄音中…";
+    _advRec.start();
+    setTimeout(() => { if (_advRec && _advRec.state === "recording") _advRec.stop(); }, 2500);
+  } catch (e) {
+    if (btn) btn.textContent = "（不能錄音）";
+  }
 }
 
 function advWalkTo(i, activate) {
@@ -1845,7 +2078,11 @@ let _advResizeT = null;
 window.addEventListener("resize", () => {
   if (!advState || !document.getElementById("advViewport")) return;
   clearTimeout(_advResizeT);
-  _advResizeT = setTimeout(() => advBuildWorld(advTargetIndex()), 220);
+  _advResizeT = setTimeout(() => {
+    // 小考/複習進行中不重建世界（會清掉題目）；只重算鏡頭
+    if (advState.phase === "quiz" || advState.phase === "review") { advApplyCamera(false); return; }
+    advBuildWorld(advTargetIndex());
+  }, 220);
 });
 
 function nextRobotRound() {
@@ -2023,7 +2260,7 @@ function renderHome() {
 
 function resetProgress() {
   if (confirm("確定要重來嗎？所有星星會歸零")) {
-    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] } } };
+    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } } };
     saveState();
     renderHome();
   }
@@ -2478,9 +2715,13 @@ window.renderAlphabet = renderAlphabet;
 window.playZhuyinCell = playZhuyinCell;
 window.startRobotAdventure = startRobotAdventure;
 window.pickRobotChoice = pickRobotChoice;
-window.advCollect = advCollect;
 window.advReplay = advReplay;
 window.advTapStation = advTapStation;
+window.advStartQuiz = advStartQuiz;
+window.advAnswer = advAnswer;
+window.advCombine = advCombine;
+window.advReplayTarget = advReplayTarget;
+window.advRecord = advRecord;
 renderHome();
 </script>
 </body>
