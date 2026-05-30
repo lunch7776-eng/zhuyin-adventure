@@ -647,249 +647,161 @@
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
   }
 
-  /* === 2D 探索玩法 === */
-  .explore-banner {
-    background: rgba(255,255,255,.78);
-    border-radius: 20px;
-    padding: 12px 20px;
-    text-align: center;
-    font-weight: 900;
-    font-size: 20px;
-    color: #25324a;
+  /* === 橫向闖關探險 (side-scroll adventure) === */
+  .adv-banner {
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    background: rgba(255,255,255,.84);
+    border-radius: 18px; padding: 10px 22px; margin: 6px auto 10px;
+    max-width: min(96vw, 1180px);
+    font-weight: 900; font-size: 19px; color:#25324a;
     box-shadow: var(--shadow-soft);
-    margin: 6px 0;
   }
-  .explore-banner .ezone-name { color: #2c3850; }
-  .explore-banner .ezone-progress { color: #a45d2b; margin-left: 8px; }
-  .explore-hint {
-    text-align: center;
-    color: #6c7d98;
-    font-size: 13px;
-    margin: 4px 0 10px;
+  .adv-banner .azone { color:#2c3850; letter-spacing:.02em; }
+  .adv-banner .aprog {
+    color:#a45d2b; background:#fff3e2; padding:2px 12px; border-radius:999px; font-size:16px;
   }
-  .explore-stage {
+
+  .adv-viewport {
     position: relative;
     width: 100%;
-    max-width: min(95vw, 1200px);
-    height: min(70vh, 720px);
-    background: linear-gradient(170deg, #ddeaf3 0%, #f4efe5 100%);
-    border-radius: 24px;
+    max-width: min(96vw, 1180px);
+    height: clamp(300px, 50vh, 500px);
+    margin: 0 auto;
+    border-radius: 26px;
     overflow: hidden;
-    cursor: pointer;
-    margin: 0 auto 12px;
     box-shadow: var(--shadow-pop);
     touch-action: manipulation;
+    isolation: isolate;
+    background: linear-gradient(180deg,#a9d8f0 0%,#cdeafb 58%,#e9f6ff 100%);
   }
-  .explore-stage.zone-initials {
-    background:
-      radial-gradient(circle at 15% 10%, rgba(255,255,255,.7), transparent 20%),
-      linear-gradient(180deg, #b9d7ea 0%, #d6e8f5 36%, #90be92 36%, #7cae7e 100%);
-  }
-  .explore-stage.zone-finals {
-    background:
-      radial-gradient(circle at 70% 8%, rgba(255,233,183,.25), transparent 25%),
-      linear-gradient(180deg, #a8c7b3 0%, #85ad93 44%, #668d73 44%, #537762 100%);
-  }
-  .explore-stage.zone-combined {
-    background:
-      radial-gradient(circle at 72% 14%, rgba(255,228,162,.58), transparent 24%),
-      linear-gradient(180deg, #9ec7dd 0%, #8ec0da 34%, #e8d29c 34%, #ddc28c 100%);
-  }
-  .explore-stage::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(to bottom, rgba(255,255,255,.22), transparent 30%),
-      radial-gradient(circle at 25% 30%, rgba(255,255,255,.22), transparent 42%),
-      radial-gradient(circle at 70% 70%, rgba(0,0,0,.06), transparent 44%);
-    pointer-events: none;
-  }
-  .explore-stage::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(50% 22% at 20% 42%, rgba(255,255,255,.35), transparent 100%),
-      radial-gradient(34% 14% at 76% 22%, rgba(255,255,255,.34), transparent 100%);
-    pointer-events: none;
-  }
+  .adv-viewport.zone-initials { background: linear-gradient(180deg,#a6d6ef 0%,#cbe9fb 56%,#eaf7ff 100%); }
+  .adv-viewport.zone-finals   { background: linear-gradient(180deg,#bfe2d6 0%,#d9efe4 56%,#eef8f1 100%); }
+  .adv-viewport.zone-combined { background: linear-gradient(180deg,#ffd6a4 0%,#ffe7c6 44%,#cfe9f1 100%); }
 
-  .explore-zhuyin {
-    position: absolute;
-    width: clamp(56px, 7vw, 84px);
-    height: clamp(56px, 7vw, 84px);
-    background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), rgba(255,255,255,.45) 36%, rgba(255,255,255,.22) 64%, rgba(255,255,255,.18) 100%);
-    border: 4px solid rgba(255,255,255,.8);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(28px, 3.5vw, 40px);
-    font-weight: 900;
-    color: #2b3a56;
-    box-shadow: 0 0 16px rgba(255,206,134,.4), 0 12px 18px rgba(28, 38, 56, .22), inset 0 2px 10px rgba(255,255,255,.5);
-    animation: bobGem 2.4s ease-in-out infinite;
+  .adv-layer {
+    position:absolute; top:0; bottom:0; left:0;
+    will-change: transform;
+  }
+  .adv-sky   { z-index:1; }
+  .adv-hills { z-index:2; }
+  .adv-field { z-index:3; }
+
+  .adv-station {
+    position:absolute;
     transform: translate(-50%, -50%);
-    transition: opacity 0.5s, transform 0.5s;
-    pointer-events: none;
-    user-select: none;
-    z-index: 2;
+    display:flex; flex-direction:column; align-items:center;
+    z-index:3; cursor:pointer;
+    transition: opacity .45s, filter .45s;
   }
-  .explore-zhuyin.combined { font-size: clamp(18px, 2.2vw, 24px); }
-  .explore-zhuyin.collected {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
+  .adv-station .st-disc {
+    width: clamp(58px,7.4vw,80px); height: clamp(58px,7.4vw,80px);
+    border-radius: 24px;
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(30px,3.8vw,42px); font-weight:900; color:#2b3a56;
+    background: linear-gradient(165deg,#ffffff,#fdf3e3);
+    box-shadow: 0 12px 22px rgba(28,38,56,.22), inset 0 2px 8px rgba(255,255,255,.75);
+    border: 3px solid rgba(255,255,255,.92);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, background .4s;
   }
-  @keyframes bobGem {
-    0%, 100% { transform: translate(-50%, calc(-50% + 0px)); }
-    50%      { transform: translate(-50%, calc(-50% - 7px)) scale(1.02); }
+  .adv-station.combined .st-disc { font-size: clamp(18px,2.3vw,24px); }
+  .adv-station .st-post {
+    width:8px; height: clamp(26px,3.4vh,40px);
+    background: linear-gradient(#d8c3a3,#ad9069); border-radius:5px; margin-top:-3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,.12);
+  }
+  .adv-station .st-flag {
+    position:absolute; top:-22px; font-size:24px;
+    opacity:0; transform: scale(0) rotate(-20deg);
+    transition: all .45s cubic-bezier(.2,.86,.3,1.4);
+  }
+  .adv-station.future { opacity:.46; filter: saturate(.55) brightness(.98); }
+  .adv-station.future .st-disc { transform: scale(.8); }
+  .adv-station.current .st-disc {
+    box-shadow: 0 0 0 5px rgba(255,168,78,.5), 0 0 28px rgba(255,156,66,.72), 0 14px 26px rgba(28,38,56,.26);
+    animation: advStPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes advStPulse {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%     { transform: translateY(-7px) scale(1.05); }
+  }
+  .adv-station.done .st-disc { background: linear-gradient(165deg,#ffffff,#eafbe9); }
+  .adv-station.done .st-flag { opacity:1; transform: scale(1) rotate(0deg); }
+
+  .adv-robot {
+    position:absolute;
+    transform: translate(-50%, -100%);
+    width: clamp(78px,8.4vw,112px); height: clamp(98px,10.6vw,142px);
+    z-index:5; pointer-events:none;
+  }
+  .adv-robot img { width:100%; height:100%; object-fit:contain; object-position:center bottom; }
+  .adv-robot.flip img { transform: scaleX(-1); }
+  .adv-robot.walk img { animation: advWalk .34s ease-in-out infinite; }
+  @keyframes advWalk {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    25%     { transform: translateY(-4px) rotate(-3.5deg); }
+    75%     { transform: translateY(-4px) rotate(3.5deg); }
+  }
+  .adv-robot.walk.flip img { animation: advWalkFlip .34s ease-in-out infinite; }
+  @keyframes advWalkFlip {
+    0%,100% { transform: scaleX(-1) translateY(0) rotate(0deg); }
+    25%     { transform: scaleX(-1) translateY(-4px) rotate(3.5deg); }
+    75%     { transform: scaleX(-1) translateY(-4px) rotate(-3.5deg); }
+  }
+  .adv-robot::after {
+    content:""; position:absolute; left:50%; bottom:2px;
+    width:56px; height:14px; transform:translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(20,28,40,.34), transparent 72%);
+    filter: blur(2px); z-index:-1;
   }
 
-  .explore-robot {
-    position: absolute;
-    width: clamp(80px, 9vw, 120px);
-    height: clamp(100px, 11.5vw, 150px);
-    pointer-events: none;
-    transition: left 0.5s cubic-bezier(.2,.8,.2,1), top 0.5s cubic-bezier(.2,.8,.2,1);
-    z-index: 5;
-    transform: translate(-50%, -100%); /* anchor = feet */
+  /* 底部互動 dock — 固定在 viewport 外，永遠不會被裁切 */
+  .adv-dock {
+    max-width: min(96vw,1180px); margin: 14px auto 6px;
+    background: linear-gradient(165deg, rgba(255,255,255,.97), rgba(248,243,234,.95));
+    border-radius: 22px; padding: 14px 20px;
+    box-shadow: var(--shadow-pop); border:1px solid rgba(255,255,255,.85);
+    display:flex; align-items:center; gap:18px;
+    animation: advDockIn .4s cubic-bezier(.2,.86,.22,1.06);
   }
-  .explore-robot::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 58px;
-    height: 16px;
-    transform: translateX(-50%);
-    background: radial-gradient(ellipse at center, rgba(22,29,40,.38) 0%, rgba(22,29,40,0) 72%);
-    filter: blur(2px);
+  @keyframes advDockIn { 0%{opacity:0; transform:translateY(12px) scale(.98);} 100%{opacity:1; transform:none;} }
+  .adv-dock .dk-symbol {
+    font-size: clamp(46px,6vw,60px); font-weight:900; color:#202d45; line-height:1;
+    min-width: 88px; text-align:center;
   }
-  .explore-robot .robot-img,
-  .explore-robot img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center bottom;
+  .adv-dock.combined .dk-symbol { font-size: clamp(32px,4.2vw,42px); }
+  .adv-dock .dk-mid { flex:1; text-align:left; min-width:0; }
+  .adv-dock .dk-word { font-size: clamp(20px,2.6vw,26px); font-weight:800; color:#33415c; }
+  .adv-dock .dk-hint { font-size:13px; color:#7a8aa3; margin-top:3px; }
+  .adv-dock .dk-actions { display:flex; gap:10px; flex-shrink:0; }
+  .adv-dock button {
+    border:none; cursor:pointer; font-weight:800; border-radius:999px;
+    font-size: clamp(15px,1.8vw,17px); padding: 12px 18px;
+    transition: transform .12s, box-shadow .2s;
   }
-  .explore-robot.walking .robot-img {
-    animation: robotBobWalk 0.35s ease-in-out infinite;
-  }
-  @keyframes robotBobWalk {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    25%      { transform: translateY(-3px) rotate(-3deg); }
-    75%      { transform: translateY(-3px) rotate(3deg); }
-  }
-  .explore-robot.flipped img { transform: scaleX(-1); }
-
-  .explore-popup {
-    position: absolute;
-    background: linear-gradient(165deg, rgba(255,255,255,.97), rgba(247,242,232,.94));
-    border-radius: 22px;
-    border: 1px solid rgba(255,255,255,.8);
-    padding: 16px;
-    backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-pop);
-    z-index: 50;
-    text-align: center;
-    pointer-events: auto;
-    min-width: 220px;
-    animation: popupIn 0.35s cubic-bezier(.2,.86,.22,1.08);
-  }
-  @keyframes popupIn {
-    0%   { opacity: 0; transform: scale(0.6); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-  .explore-popup::after {
-    content: "";
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 10px solid transparent;
-    border-top-color: #fffaf2;
-  }
-  .explore-popup.flip-down::after {
-    bottom: auto;
-    top: -10px;
-    border-top-color: transparent;
-    border-bottom-color: #fffaf2;
-  }
-  .explore-popup.no-arrow::after {
-    display: none;
-  }
-  .explore-popup .ep-zhuyin {
-    font-size: clamp(48px, 5vw, 64px);
-    font-weight: 900;
-    color: #202d45;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  .explore-popup .ep-zhuyin.combined { font-size: 36px; }
-  .explore-popup .ep-example {
-    font-size: 18px;
-    color: #5d6b84;
-    margin-bottom: 12px;
-  }
-  .explore-popup button {
-    background: #efe9dd;
-    border: none;
-    color: #4a556f;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    margin: 4px;
-    box-shadow: 0 6px 16px rgba(23,30,44,.12);
-  }
-  .explore-popup button:active { transform: translateY(2px) scale(.98); }
-  .explore-popup .ep-collect {
+  .adv-dock .dk-replay { background:#efe9dd; color:#4a556f; box-shadow:0 6px 14px rgba(23,30,44,.12); }
+  .adv-dock .dk-go {
     background: linear-gradient(165deg, var(--accent-2), var(--accent));
-    color: #fffdf8;
-    box-shadow: 0 12px 24px rgba(255, 140, 66, 0.35);
+    color:#fffdf8; box-shadow: 0 12px 24px rgba(255,140,66,.34);
   }
-  .explore-popup .ep-collect:active { box-shadow: 0 8px 12px rgba(255, 140, 66, 0.25); }
+  .adv-dock button:active { transform: translateY(2px) scale(.98); }
 
-  .explore-progress-bar {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto 12px;
-    height: 14px;
-    background: rgba(255,255,255,.66);
-    border-radius: 999px;
-    overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+  .adv-dots {
+    max-width: min(96vw,1180px); margin: 6px auto 16px;
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
   }
-  .explore-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ffd797, #ff9148);
-    border-radius: 999px;
-    transition: width 0.5s;
+  .adv-dot {
+    width:16px; height:8px; border-radius:999px; background:rgba(0,0,0,.12);
+    transition: background .3s, box-shadow .3s;
   }
-  .explore-dottrack {
-    width: 100%;
-    max-width: 800px;
-    margin: 4px auto 12px;
-    display: grid;
-    grid-template-columns: repeat(21, minmax(0, 1fr));
-    gap: 6px;
-  }
-  .explore-dot {
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.42);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
-  }
-  .explore-dot.active {
-    background: linear-gradient(90deg, #ffd79b, #ff8f45);
-    box-shadow: 0 0 12px rgba(255,153,85,.52);
-  }
+  .adv-dot.active { background: linear-gradient(90deg,#ffd79b,#ff8f45); box-shadow:0 0 8px rgba(255,153,85,.5); }
 
   @media (max-width: 600px) {
-    .explore-stage { height: 55vh; }
+    .adv-dock { flex-wrap:wrap; justify-content:center; text-align:center; gap:10px; }
+    .adv-dock .dk-symbol { order:1; min-width:auto; }
+    .adv-dock .dk-mid { order:2; flex-basis:100%; text-align:center; }
+    .adv-dock .dk-actions { order:3; flex-basis:100%; justify-content:center; }
   }
+
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-14px); }
@@ -1657,311 +1569,284 @@ const EXPLORE_ZONE_META = {
   finals:   { name: "🌳 韻符森林",   cls: "zone-finals" },
   combined: { name: "🏝️ 結合韻島", cls: "zone-combined" },
 };
-function renderExploreScene(stage) {
-  if (stage === "initials") {
-    return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
-      <path d="M0 265 L120 180 L260 256 L390 172 L540 268 L700 192 L800 250 L800 500 L0 500 Z" fill="rgba(98,141,106,.55)"/>
-      <path d="M0 300 L150 230 L300 292 L455 222 L625 304 L800 268 L800 500 L0 500 Z" fill="rgba(68,118,78,.56)"/>
-      <ellipse cx="120" cy="90" rx="56" ry="20" fill="rgba(255,255,255,.68)"/>
-      <ellipse cx="245" cy="66" rx="48" ry="16" fill="rgba(255,255,255,.62)"/>
-      <ellipse cx="680" cy="84" rx="62" ry="22" fill="rgba(255,255,255,.66)"/>
-    </svg>`;
-  }
-  if (stage === "finals") {
-    return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
-      <circle cx="640" cy="72" r="68" fill="rgba(255,245,210,.2)"/>
-      <path d="M0 252 C100 220,180 310,290 264 C390 220,520 308,620 252 C708 205,770 268,800 242 L800 500 L0 500 Z" fill="rgba(74,116,86,.52)"/>
-      <path d="M0 310 C105 282,220 356,330 320 C435 286,560 358,685 302 C735 278,770 292,800 280 L800 500 L0 500 Z" fill="rgba(56,86,63,.66)"/>
-      <circle cx="180" cy="140" r="64" fill="rgba(187,223,181,.22)"/>
-      <circle cx="500" cy="120" r="56" fill="rgba(187,223,181,.16)"/>
-    </svg>`;
-  }
-  return `<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;z-index:1">
-    <defs><linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(255,255,255,.46)"/><stop offset="100%" stop-color="rgba(141,195,224,.34)"/></linearGradient></defs>
-    <circle cx="682" cy="78" r="46" fill="rgba(255,224,164,.58)"/>
-    <path d="M0 326 C102 290,202 368,308 334 C408 300,528 368,636 336 C710 314,760 322,800 306 L800 500 L0 500 Z" fill="rgba(220,194,141,.72)"/>
-    <path d="M0 290 C108 254,220 320,322 292 C434 258,556 328,660 290 C728 266,770 280,800 270" stroke="url(#waveGrad)" stroke-width="12" fill="none"/>
-    <path d="M0 308 C110 272,210 346,316 312 C428 278,550 346,654 308 C720 286,768 294,800 282" stroke="rgba(255,255,255,.36)" stroke-width="7" fill="none"/>
-  </svg>`;
-}
-
-let exploreState = null;
-let _exploreInteracting = false;
-let _exploreWalkTimer = null;
-
-function placeZhuyinOnMap(items) {
-  const positions = [];
-  const MIN_DIST = items.length > 18 ? 11 : 13;
-  const MARGIN_X = 8;
-  const MARGIN_TOP = 14;
-  const MARGIN_BOT = 8;
-  for (const z of items) {
-    let x, y, attempts = 0;
-    do {
-      x = MARGIN_X + Math.random() * (100 - MARGIN_X * 2);
-      y = MARGIN_TOP + Math.random() * (100 - MARGIN_TOP - MARGIN_BOT);
-      attempts++;
-    } while (
-      attempts < 80 &&
-      positions.some(p => Math.hypot(p.x - x, p.y - y) < MIN_DIST)
-    );
-    positions.push({ z, x, y });
-  }
-  return positions;
-}
+let advState = null;
 
 function startRobotAdventure() {
-  // 新版主玩法：2D 探索
   startRobotExplore();
 }
 
 function startRobotExplore() {
   const stage = state.robot.stage;
-  const stageSet = getRobotStageSet(stage);
+  const symbols = ROBOT_STAGE_META[stage].list();
   const collected = state.robot.collected[stage];
+  if (collected.length >= symbols.length) return showRobotStageComplete();
 
-  // 整個 stage 已完成 → 進下一個
-  if (collected.length >= stageSet.length) {
-    return showRobotStageComplete();
-  }
-
-  // 還沒收集的注音散布在地圖上
-  const remaining = stageSet.filter(z => !collected.includes(z));
-  const positions = placeZhuyinOnMap(remaining);
-
-  exploreState = {
-    stage,
-    stageSet,
-    positions,
-    robot: { x: 50, y: 60 },
-    facing: 1,
-  };
-  _exploreInteracting = false;
-
-  renderExplore();
+  advState = { stage, symbols, walking: false, boboX: 0, L: null, vpW: 0 };
+  renderAdventure();
 }
 
-function renderExplore() {
-  const { stage, stageSet, positions, robot, facing } = exploreState;
+function advTargetIndex() {
+  const { stage, symbols } = advState;
+  const collected = state.robot.collected[stage];
+  for (let i = 0; i < symbols.length; i++) {
+    if (!collected.includes(symbols[i].z)) return i;
+  }
+  return symbols.length - 1;
+}
+
+function advLayout(vpW, vpH) {
+  const symbols = advState.symbols;
+  const N = symbols.length;
+  const GAP = Math.max(158, Math.min(212, vpW * 0.24));
+  const PAD = Math.max(vpW * 0.40, 170);
+  const worldW = PAD * 2 + GAP * (N - 1);
+  const groundTop = vpH - Math.max(80, vpH * 0.21);
+  const stations = symbols.map((s, i) => {
+    const x = PAD + GAP * i;
+    const lift = (i % 2 === 0) ? 0 : 16;
+    const y = groundTop - 108 - lift;
+    return { x, y, z: s.z, ex: s.ex, emo: s.emo, i };
+  });
+  return { GAP, PAD, worldW, groundTop, stations, vpH };
+}
+
+function advSkyHTML(stage, w, h) {
+  const sunColor = stage === "combined" ? "rgba(255,210,150,.9)" : "rgba(255,250,225,.82)";
+  let clouds = "";
+  const n = Math.ceil(w / 430) + 1;
+  for (let i = 0; i < n; i++) {
+    const cx = 150 + i * 430 + (i % 2 ? 90 : 0);
+    const cy = 48 + (i % 3) * 28;
+    clouds += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="62" ry="20" fill="rgba(255,255,255,.72)"/>' +
+              '<ellipse cx="' + (cx + 46) + '" cy="' + (cy + 8) + '" rx="46" ry="16" fill="rgba(255,255,255,.6)"/>';
+  }
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="position:absolute;inset:0">' +
+    '<circle cx="200" cy="80" r="48" fill="' + sunColor + '"/>' + clouds + '</svg>';
+}
+
+function advHillsHTML(stage, w, h) {
+  const cols = {
+    initials: ["rgba(150,196,150,.62)", "rgba(110,165,115,.72)"],
+    finals:   ["rgba(124,172,134,.6)",  "rgba(86,130,96,.74)"],
+    combined: ["rgba(224,192,142,.6)",  "rgba(198,162,112,.74)"]
+  }[stage];
+  const base = h * 0.56;
+  let p1 = "M0 " + base;
+  for (let x = 0; x <= w; x += 170) p1 += " Q " + (x + 85) + " " + (base - 64) + " " + (x + 170) + " " + base;
+  p1 += " L " + w + " " + h + " L 0 " + h + " Z";
+  const base2 = h * 0.72;
+  let p2 = "M0 " + base2;
+  for (let x = 0; x <= w; x += 230) p2 += " Q " + (x + 115) + " " + (base2 - 74) + " " + (x + 230) + " " + base2;
+  p2 += " L " + w + " " + h + " L 0 " + h + " Z";
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="position:absolute;inset:0">' +
+    '<path d="' + p1 + '" fill="' + cols[0] + '"/><path d="' + p2 + '" fill="' + cols[1] + '"/></svg>';
+}
+
+function advGroundHTML(stage, L) {
+  const w = L.worldW, top = L.groundTop, h = L.vpH;
+  const g = {
+    initials: ["#9fd19b", "#79b07d"],
+    finals:   ["#80b48a", "#5d8c66"],
+    combined: ["#ecd5a0", "#d8bd86"]
+  }[stage];
+  let p = "M0 " + top;
+  for (let x = 0; x <= w; x += 200) p += " Q " + (x + 100) + " " + (top - 13) + " " + (x + 200) + " " + top;
+  p += " L " + w + " " + h + " L 0 " + h + " Z";
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="position:absolute;inset:0;z-index:1">' +
+    '<defs><linearGradient id="advGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + g[0] + '"/><stop offset="1" stop-color="' + g[1] + '"/></linearGradient></defs>' +
+    '<path d="' + p + '" fill="url(#advGround)"/></svg>';
+}
+
+function advTrailHTML(L) {
+  const pts = L.stations.map(s => s.x + "," + (s.y + 56)).join(" ");
+  return '<svg width="' + L.worldW + '" height="' + L.vpH + '" viewBox="0 0 ' + L.worldW + ' ' + L.vpH + '" preserveAspectRatio="none" style="position:absolute;inset:0;z-index:1">' +
+    '<polyline points="' + pts + '" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 17"/></svg>';
+}
+
+function renderAdventure() {
+  const { stage, symbols } = advState;
   const meta = EXPLORE_ZONE_META[stage];
   const collected = state.robot.collected[stage];
-  const isCombined = stage === "combined";
-  const zhuyinClass = isCombined ? "explore-zhuyin combined" : "explore-zhuyin";
+  const dots = symbols.map((_, i) => '<div class="adv-dot ' + (i < collected.length ? 'active' : '') + '"></div>').join("");
 
   const app = document.getElementById("app");
-  app.innerHTML = `
-    <div class="topbar">
-      <button onclick="renderHome()">← 回地圖</button>
-      <div class="right-group">
-        <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
-        <div class="stars">⭐ ${state.totalStars}</div>
-      </div>
-    </div>
-    <div class="explore-banner">
-      <span class="ezone-name">${meta.name}</span>
-      <span class="ezone-progress">${collected.length} / ${stageSet.length}</span>
-    </div>
-    <div class="explore-hint">點地圖任何位置 → BOBO 走過去 → 走到注音會自動跟你互動</div>
-    <div class="explore-stage ${meta.cls}" id="exploreStage" onclick="onExploreClick(event)">
-      ${renderExploreScene(stage)}
-      ${positions.map(p => `
-        <div class="${zhuyinClass}" data-z="${p.z}"
-             style="left:${p.x}%;top:${p.y}%"
-             aria-label="注音 ${p.z}">${p.z}</div>
-      `).join("")}
-      <div id="exploreRobot" class="explore-robot ${facing < 0 ? 'flipped' : ''}"
-           style="left:${robot.x}%;top:${robot.y}%">
-        <img id="robotImg" class="robot-img" src="${ROBOT_IDLE_SRC}" alt="BOBO"
-             onerror="this.style.display='none'">
-      </div>
-    </div>
-    <div class="explore-progress-bar">
-      <div class="explore-progress-fill"
-           style="width:${(collected.length / stageSet.length) * 100}%"></div>
-    </div>
-    <div class="explore-dottrack">
-      ${Array.from({ length: stageSet.length }).map((_, i) => `
-        <div class="explore-dot ${i < collected.length ? "active" : ""}"></div>
-      `).join("")}
-    </div>
-  `;
+  app.innerHTML =
+    '<div class="topbar">' +
+      '<button onclick="renderHome()">← 回地圖</button>' +
+      '<div class="right-group">' +
+        '<button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>' +
+        '<div class="stars">⭐ ' + state.totalStars + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="adv-banner"><span class="azone">' + meta.name + '</span><span class="aprog">' + collected.length + ' / ' + symbols.length + '</span></div>' +
+    '<div class="adv-viewport ' + meta.cls + '" id="advViewport">' +
+      '<div class="adv-layer adv-sky" id="advSky"></div>' +
+      '<div class="adv-layer adv-hills" id="advHills"></div>' +
+      '<div class="adv-layer adv-field" id="advField"></div>' +
+    '</div>' +
+    '<div class="adv-dock" id="advDock"></div>' +
+    '<div class="adv-dots">' + dots + '</div>';
 
-  // 偵測「碰巧 spawn 時就站在注音旁」— 等 100ms 給 render 完
-  setTimeout(() => checkNearestZhuyin(), 200);
+  requestAnimationFrame(() => advBuildWorld(advTargetIndex()));
 }
 
-function onExploreClick(ev) {
-  if (_exploreInteracting) return;
-  // 點到注音本身（pointer-events:none 不會觸發，但保險）或機器人 — 都當地圖點擊
-  const stageEl = document.getElementById("exploreStage");
-  const rect = stageEl.getBoundingClientRect();
-  const x = ((ev.clientX - rect.left) / rect.width) * 100;
-  const y = ((ev.clientY - rect.top) / rect.height) * 100;
-  moveRobotTo(x, y);
-}
-
-function moveRobotTo(x, y) {
-  if (_exploreInteracting) return;
-  const r = document.getElementById("exploreRobot");
-  if (!r) return;
-  // 邊界 clamp（百分比）
-  const MARGIN_X = 6;
-  const MARGIN_TOP = 14;
-  const MARGIN_BOT = 4;
-  x = Math.max(MARGIN_X, Math.min(100 - MARGIN_X, x));
-  y = Math.max(MARGIN_TOP, Math.min(100 - MARGIN_BOT, y));
-  const old = exploreState.robot;
-  const dx = x - old.x, dy = y - old.y;
-  const distPct = Math.hypot(dx, dy);
-  const duration = Math.max(220, Math.min(1800, distPct * 28));
-
-  exploreState.robot = { x, y };
-  exploreState.facing = dx >= 0 ? 1 : -1;
-  r.classList.toggle("flipped", exploreState.facing < 0);
-
-  r.style.transition = `left ${duration}ms ease-out, top ${duration}ms ease-out`;
-  r.style.left = x + "%";
-  r.style.top = y + "%";
-  r.classList.add("walking");
-
-  if (_exploreWalkTimer) clearTimeout(_exploreWalkTimer);
-  _exploreWalkTimer = setTimeout(() => {
-    r.classList.remove("walking");
-    checkNearestZhuyin();
-  }, duration + 30);
-}
-
-function checkNearestZhuyin() {
-  if (_exploreInteracting) return;
-  const { stage, positions, robot } = exploreState;
+function advBuildWorld(targetIdx) {
+  const vp = document.getElementById("advViewport");
+  if (!vp) return;
+  const vpW = vp.clientWidth || 900;
+  const vpH = vp.clientHeight || 400;
+  const L = advLayout(vpW, vpH);
+  advState.L = L;
+  advState.vpW = vpW;
+  const stage = advState.stage;
   const collected = state.robot.collected[stage];
-  const TRIGGER = 9;
-  let closest = null, minD = TRIGGER;
-  for (const p of positions) {
-    if (collected.includes(p.z)) continue;
-    const d = Math.hypot(p.x - robot.x, p.y - robot.y);
-    if (d < minD) { minD = d; closest = p; }
-  }
-  if (closest) {
-    showExplorePopup(closest);
-  }
-}
-
-function showExplorePopup(p) {
-  _exploreInteracting = true;
-  const stage = state.robot.stage;
   const isCombined = stage === "combined";
-  const item = ROBOT_STAGE_META[stage].list().find(x => x.z === p.z);
-  const example = item ? item.ex : "";
-  const emoji = item ? (item.emo || "") : "";
 
-  speak(getRobotSpeakText(stage, p.z));
+  const sky = document.getElementById("advSky");
+  const hills = document.getElementById("advHills");
+  const field = document.getElementById("advField");
+  sky.style.width = hills.style.width = field.style.width = L.worldW + "px";
+  sky.innerHTML = advSkyHTML(stage, L.worldW, vpH);
+  hills.innerHTML = advHillsHTML(stage, L.worldW, vpH);
 
-  const stageEl = document.getElementById("exploreStage");
-  stageEl.querySelectorAll(".explore-popup").forEach(el => el.remove());
+  let fieldHTML = advGroundHTML(stage, L) + advTrailHTML(L);
+  fieldHTML += L.stations.map(st => {
+    const done = collected.includes(st.z);
+    const cls = done ? "done" : (st.i === targetIdx ? "current" : (st.i < targetIdx ? "done" : "future"));
+    return '<div class="adv-station ' + (isCombined ? 'combined ' : '') + cls + '" data-i="' + st.i + '" data-z="' + st.z + '" ' +
+           'style="left:' + st.x + 'px;top:' + st.y + 'px" onclick="advTapStation(' + st.i + ')">' +
+           '<div class="st-flag">🚩</div><div class="st-disc">' + st.z + '</div><div class="st-post"></div></div>';
+  }).join("");
+  fieldHTML += '<div class="adv-robot" id="advRobot" style="left:' + L.stations[targetIdx].x + 'px;top:' + (L.groundTop + 4) + 'px">' +
+               '<img id="robotImg" class="robot-img" src="' + ROBOT_IDLE_SRC + '" alt="BOBO" onerror="this.style.display=\'none\'"></div>';
+  field.innerHTML = fieldHTML;
 
-  // 1) 先建立 popup 並隱藏，量測實際尺寸後再定位
-  const popup = document.createElement("div");
-  popup.className = "explore-popup";
-  popup.style.visibility = "hidden";
-  popup.style.position = "absolute";
-  popup.style.transform = "none";
-  popup.style.left = "0";
-  popup.style.top = "0";
-  popup.innerHTML = `
-    <div class="ep-zhuyin ${isCombined ? 'combined' : ''}">${p.z}</div>
-    <div class="ep-example">${emoji} ${example}</div>
-    <button onclick="speak('${getRobotSpeakText(stage, p.z)}', 0.7)">🔊 再聽</button>
-    <button class="ep-collect" onclick="collectExploreZhuyin('${p.z}')">✓ 我會念了</button>
-  `;
-  stageEl.appendChild(popup);
-
-  // 2) 量測 stage 與 popup 尺寸（px）
-  const sRect = stageEl.getBoundingClientRect();
-  const pRect = popup.getBoundingClientRect();
-  const pW = pRect.width;
-  const pH = pRect.height;
-
-  // 機器人目前 % 座標轉成 stage 內 px 座標
-  const robotPx = (exploreState.robot.x / 100) * sRect.width;
-  const robotPy = (exploreState.robot.y / 100) * sRect.height;
-
-  const ROBOT_H_APPROX = 130;
-  const GAP = 16;
-  const EDGE_MARGIN = 12;
-
-  // 3) 垂直 placement：預設 above，不夠則 below，再不夠 center
-  let py;
-  let placement = "above";
-  const robotTop = robotPy - ROBOT_H_APPROX / 2;
-  const robotBottom = robotPy + ROBOT_H_APPROX / 2;
-  const tentativeTopAbove = robotTop - GAP - pH;
-  if (tentativeTopAbove >= EDGE_MARGIN) {
-    py = tentativeTopAbove;
-    placement = "above";
-  } else {
-    const tentativeTopBelow = robotBottom + GAP;
-    if (tentativeTopBelow + pH <= sRect.height - EDGE_MARGIN) {
-      py = tentativeTopBelow;
-      placement = "below";
-    } else {
-      py = Math.max(EDGE_MARGIN, (sRect.height - pH) / 2);
-      placement = "center";
-    }
-  }
-
-  // 4) 水平 clamp：以機器人中心對齊 popup，但不出左右邊界
-  let px = robotPx - pW / 2;
-  px = Math.max(EDGE_MARGIN, Math.min(sRect.width - pW - EDGE_MARGIN, px));
-
-  // 5) 套用最終位置並顯示
-  popup.style.left = px + "px";
-  popup.style.top = py + "px";
-  popup.style.visibility = "";
-  popup.classList.toggle("flip-down", placement === "below");
-  if (placement === "center") popup.classList.add("no-arrow");
+  advState.boboX = L.stations[targetIdx].x;
+  advApplyCamera(false);
+  advRenderDock(targetIdx);
+  setTimeout(() => speak(getRobotSpeakText(stage, advState.symbols[targetIdx].z)), 360);
 }
 
-function collectExploreZhuyin(z) {
-  const stage = state.robot.stage;
-  if (!state.robot.collected[stage].includes(z)) {
-    state.robot.collected[stage].push(z);
+function advApplyCamera(animate, dur) {
+  const L = advState.L, vpW = advState.vpW;
+  if (!L) return;
+  const cam = Math.max(0, Math.min(Math.max(0, L.worldW - vpW), advState.boboX - vpW * 0.40));
+  const sky = document.getElementById("advSky");
+  const hills = document.getElementById("advHills");
+  const field = document.getElementById("advField");
+  const t = animate ? ("transform " + dur + "ms cubic-bezier(.22,.7,.2,1)") : "none";
+  [sky, hills, field].forEach(e => { if (e) e.style.transition = t; });
+  if (sky) sky.style.transform = "translateX(" + (-cam * 0.25) + "px)";
+  if (hills) hills.style.transform = "translateX(" + (-cam * 0.55) + "px)";
+  if (field) field.style.transform = "translateX(" + (-cam) + "px)";
+}
+
+function advRenderDock(idx) {
+  const { stage, symbols } = advState;
+  const sym = symbols[idx];
+  const dock = document.getElementById("advDock");
+  if (!dock) return;
+  dock.className = "adv-dock" + (stage === "combined" ? " combined" : "");
+  dock.innerHTML =
+    '<div class="dk-symbol">' + sym.z + '</div>' +
+    '<div class="dk-mid">' +
+      '<div class="dk-word">' + (sym.emo || "") + ' ' + sym.ex + '</div>' +
+      '<div class="dk-hint">聽 BOBO 念 → 你跟著念一次 → 按「我會念了」</div>' +
+    '</div>' +
+    '<div class="dk-actions">' +
+      '<button class="dk-replay" onclick="advReplay()">🔊 再聽</button>' +
+      '<button class="dk-go" onclick="advCollect()">✓ 我會念了</button>' +
+    '</div>';
+}
+
+function advReplay() {
+  const i = advTargetIndex();
+  speak(getRobotSpeakText(advState.stage, advState.symbols[i].z), 0.72);
+}
+
+function advTapStation(i) {
+  if (advState.walking) return;
+  const s = advState.symbols[i];
+  speak(getRobotSpeakText(advState.stage, s.z), 0.72);
+}
+
+function advCollect() {
+  if (advState.walking) return;
+  const { stage, symbols } = advState;
+  const idx = advTargetIndex();
+  const sym = symbols[idx];
+
+  if (!state.robot.collected[stage].includes(sym.z)) {
+    state.robot.collected[stage].push(sym.z);
     saveState();
   }
-  // 視覺：注音縮成消失
-  const zEl = document.querySelector(`.explore-zhuyin[data-z="${z}"]`);
-  celebrateCorrect(zEl);
-  if (zEl) zEl.classList.add("collected");
-  // popup 關閉
-  document.querySelectorAll(".explore-popup").forEach(el => el.remove());
-  // 機器人 happy 動畫 + 念回饋
-  playRobotAnim("happy");
-  speak(`好棒！${z}`);
-  // 更新進度條
-  const fill = document.querySelector(".explore-progress-fill");
-  if (fill) {
-    const stageSet = getRobotStageSet(stage);
-    fill.style.width = ((state.robot.collected[stage].length / stageSet.length) * 100) + "%";
-  }
-  const dots = document.querySelectorAll(".explore-dottrack .explore-dot");
-  const activeCount = state.robot.collected[stage].length;
-  dots.forEach((d, i) => d.classList.toggle("active", i < activeCount));
-  // 更新 banner 進度
-  const prog = document.querySelector(".ezone-progress");
-  if (prog) {
-    const stageSet = getRobotStageSet(stage);
-    prog.textContent = `${state.robot.collected[stage].length} / ${stageSet.length}`;
-  }
-  _exploreInteracting = false;
 
-  // 全部收集完？
-  const stageSet = getRobotStageSet(stage);
-  if (state.robot.collected[stage].length >= stageSet.length) {
-    setTimeout(() => {
-      showRobotStageComplete();
-    }, 900);
+  const stEl = document.querySelector('.adv-station[data-i="' + idx + '"]');
+  celebrateCorrect(stEl);
+  playRobotAnim("happy");
+  speak("好棒！" + sym.z);
+  if (stEl) { stEl.classList.remove("current", "future"); stEl.classList.add("done"); }
+  advUpdateProgress();
+
+  if (state.robot.collected[stage].length >= symbols.length) {
+    setTimeout(showRobotStageComplete, 1050);
+    return;
   }
+  const next = advTargetIndex();
+  setTimeout(() => advWalkTo(next, true), 720);
 }
+
+function advWalkTo(i, activate) {
+  const L = advState.L;
+  if (!L) return;
+  advState.walking = true;
+  const robot = document.getElementById("advRobot");
+  const fromX = advState.boboX;
+  const toX = L.stations[i].x;
+  advState.boboX = toX;
+
+  if (robot) {
+    robot.classList.toggle("flip", toX < fromX);
+    robot.classList.add("walk");
+  }
+  document.querySelectorAll(".adv-station.current").forEach(e => e.classList.remove("current"));
+  const stEl = document.querySelector('.adv-station[data-i="' + i + '"]');
+  if (stEl && !stEl.classList.contains("done")) {
+    stEl.classList.remove("future");
+    stEl.classList.add("current");
+  }
+
+  const dur = Math.min(1500, Math.max(480, Math.abs(toX - fromX) * 2.1));
+  advApplyCamera(true, dur);
+  if (robot) {
+    robot.style.transition = "left " + dur + "ms cubic-bezier(.22,.7,.2,1)";
+    robot.style.left = toX + "px";
+  }
+
+  setTimeout(() => {
+    if (robot) robot.classList.remove("walk");
+    advState.walking = false;
+    if (activate) {
+      advRenderDock(i);
+      speak(getRobotSpeakText(advState.stage, advState.symbols[i].z));
+    }
+  }, dur + 40);
+}
+
+function advUpdateProgress() {
+  const { stage, symbols } = advState;
+  const done = state.robot.collected[stage].length;
+  const prog = document.querySelector(".adv-banner .aprog");
+  if (prog) prog.textContent = done + " / " + symbols.length;
+  document.querySelectorAll(".adv-dots .adv-dot").forEach((d, i) => d.classList.toggle("active", i < done));
+}
+
+let _advResizeT = null;
+window.addEventListener("resize", () => {
+  if (!advState || !document.getElementById("advViewport")) return;
+  clearTimeout(_advResizeT);
+  _advResizeT = setTimeout(() => advBuildWorld(advTargetIndex()), 220);
+});
 
 function nextRobotRound() {
   const stage = state.robot.stage;
@@ -2593,8 +2478,9 @@ window.renderAlphabet = renderAlphabet;
 window.playZhuyinCell = playZhuyinCell;
 window.startRobotAdventure = startRobotAdventure;
 window.pickRobotChoice = pickRobotChoice;
-window.onExploreClick = onExploreClick;
-window.collectExploreZhuyin = collectExploreZhuyin;
+window.advCollect = advCollect;
+window.advReplay = advReplay;
+window.advTapStation = advTapStation;
 renderHome();
 </script>
 </body>
