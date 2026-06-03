@@ -2809,8 +2809,8 @@ function renderWritingModal() {
       '</div>' +
     '</div>';
   document.body.appendChild(modal);
-  const paths = window.ZHUYIN_STROKES[ch];
-  document.getElementById("wpGuide").innerHTML = '<path d="' + paths[paths.length - 1] + '" fill="#e7e2d8"/>';
+  const strokes = window.ZHUYIN_STROKES[ch];
+  document.getElementById("wpGuide").innerHTML = '<path d="' + strokes.map(s => s.d).join(" ") + '" fill="#e7e2d8"/>';
   setupWritingCanvas();
   speak(ch, 0.7);
   setTimeout(playStrokeDemo, 550);
@@ -2850,7 +2850,7 @@ function setupWritingCanvas() {
 function playStrokeDemo() {
   if (!_wpState) return;
   const ch = _wpState.chars[_wpState.idx];
-  const paths = window.ZHUYIN_STROKES[ch];
+  const strokes = window.ZHUYIN_STROKES[ch];
   const demo = document.getElementById("wpDemo");
   const badge = document.getElementById("wpBadge");
   if (!demo) return;
@@ -2858,20 +2858,29 @@ function playStrokeDemo() {
   let i = 0;
   function step() {
     if (!_wpState || !document.getElementById("wpDemo")) return;
-    if (i >= paths.length) {
+    if (i >= strokes.length) {
       _wpState.demoTimer = setTimeout(() => {
         const d = document.getElementById("wpDemo"); if (d) d.innerHTML = "";
         const b = document.getElementById("wpBadge"); if (b) b.classList.remove("show");
-      }, 700);
+      }, 800);
       return;
     }
-    let html = '<path d="' + paths[i] + '" fill="#ff9a52"/>';
-    if (i > 0) html += '<path d="' + paths[i - 1] + '" fill="#c9d1dd"/>';
+    let html = "";
+    // 已完成的筆：灰色
+    for (let k = 0; k < i; k++) html += '<path d="' + strokes[k].d + '" fill="#c9d1dd"/>';
+    // 當前筆：橘色
+    html += '<path d="' + strokes[i].d + '" fill="#ff9a52"/>';
+    // 起筆紅點（指示從哪開始）
+    const t = strokes[i].t;
+    if (t && t.length) {
+      html += '<circle cx="' + t[0][0] + '" cy="' + t[0][1] + '" r="60" fill="#e8502e"/>';
+      html += '<circle cx="' + t[0][0] + '" cy="' + t[0][1] + '" r="60" fill="none" stroke="#fff" stroke-width="14"/>';
+    }
     demo.innerHTML = html;
-    badge.textContent = paths.length > 1 ? ("第 " + (i + 1) + " 筆") : "這樣寫";
+    badge.textContent = strokes.length > 1 ? ("第 " + (i + 1) + " 筆") : "這樣寫";
     badge.classList.add("show");
     i++;
-    _wpState.demoTimer = setTimeout(step, 1000);
+    _wpState.demoTimer = setTimeout(step, 1100);
   }
   step();
 }
