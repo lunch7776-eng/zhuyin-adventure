@@ -836,6 +836,19 @@
   .dk-mic { background:#e7f0ff !important; color:#3a6cb0 !important; box-shadow:0 6px 14px rgba(58,108,176,.16) !important; }
   .adv-station.mastered .st-flag { font-size:26px; }
   .adv-station.mastered .st-flag::after { content:"⭐"; position:absolute; left:15px; top:-3px; font-size:14px; }
+  .qz-pic { font-size: clamp(42px,6.5vw,68px); line-height:1; display:inline-block; margin-bottom:2px; }
+  .qz-tip { color:#a45d2b; font-weight:900; margin-left:6px; }
+  .adv-dock.catch .qz-choices { min-height: clamp(96px,12vw,120px); align-items:center; }
+  .qz-choice.drift { animation: qzDrift 2.8s ease-in-out infinite; }
+  .qz-choices .qz-choice.drift:nth-child(2) { animation-duration: 3.4s; animation-delay: -.7s; }
+  .qz-choices .qz-choice.drift:nth-child(3) { animation-duration: 2.3s; animation-delay: -1.3s; }
+  .qz-choices .qz-choice.drift:nth-child(4) { animation-duration: 3.0s; animation-delay: -.4s; }
+  @keyframes qzDrift {
+    0%,100% { transform: translate(0,0) rotate(0deg); }
+    25% { transform: translate(-11px,-9px) rotate(-3deg); }
+    50% { transform: translate(9px,5px) rotate(2deg); }
+    75% { transform: translate(-6px,7px) rotate(-2deg); }
+  }
 
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
@@ -1839,7 +1852,31 @@ function addReview(z) {
   if (!advState.reviewBag.includes(z)) advState.reviewBag.push(z);
 }
 
-// ---- 小考 ----
+// ---- 小考：多種輪替小遊戲（玩中學）----
+// 聲符/韻符：listen(聽音找字) picture(看圖找字) catch(抓移動的字)
+// 結合韻：blend(拼合) combo(聽音找結合韻) medial(找介音)
+const GAME_TYPES = {
+  initials: ["listen", "picture", "catch"],
+  finals:   ["listen", "picture", "catch"],
+  combined: ["blend", "combo", "medial"]
+};
+const MEDIALS = ["ㄧ", "ㄨ", "ㄩ"];
+
+function advPickGameType(stage) {
+  const types = GAME_TYPES[stage];
+  let pool = types.filter(t => t !== advState.lastType);
+  if (!pool.length) pool = types.slice();
+  const t = pool[Math.floor(Math.random() * pool.length)];
+  advState.lastType = t;
+  return t;
+}
+
+function advChoicesHTML(values, extraClass) {
+  return values.map(v =>
+    '<button class="qz-choice ' + (extraClass || "") + '" data-val="' + v + '" onclick="advPick(\'' + v + '\')">' + v + '</button>'
+  ).join("");
+}
+
 function advStartQuiz(forceIdx) {
   if (advState.walking) return;
   const idx = (forceIdx === undefined || forceIdx === null) ? advTargetIndex() : forceIdx;
@@ -1850,86 +1887,91 @@ function advStartQuiz(forceIdx) {
   const dock = document.getElementById("advDock");
   if (!dock) return;
 
-  if (stage === "combined") {
+  const type = advPickGameType(stage);
+  let promptHTML = "", choicesHTML = "", correct = sym.z, comboHTML = "";
+
+  if (type === "listen") {
+    correct = sym.z;
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 2)]);
+    promptHTML = '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>';
+    choicesHTML = advChoicesHTML(choices);
+  } else if (type === "picture") {
+    correct = sym.z;
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 2)]);
+    promptHTML = '<div class="qz-prompt"><span class="qz-pic">' + (sym.emo || "🔊") + '</span><br>找出「' + sym.ex + '」的注音！</div>';
+    choicesHTML = advChoicesHTML(choices);
+  } else if (type === "catch") {
+    correct = sym.z;
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 3)]);
+    promptHTML = '<div class="qz-prompt">🫧 抓住 BOBO 念的字！</div>';
+    choicesHTML = advChoicesHTML(choices, "drift");
+  } else if (type === "blend") {
     const medial = sym.z[0];
-    const correctRest = sym.z.slice(1);
-    const distract = shuffle(ALL_FINALS.filter(f => f !== correctRest)).slice(0, 2);
-    const choices = shuffle([correctRest, ...distract]);
-    advState.quiz = { idx, type: "combine", correct: correctRest, medial, target: sym.z };
-    dock.className = "adv-dock quiz combined";
-    dock.innerHTML =
-      '<div class="qz-prompt">幫 <b>' + medial + '</b> 找朋友，合起來念「' + sym.ex + '」</div>' +
-      '<div class="qz-combine"><span class="qz-medial">' + medial + '</span><span class="qz-plus">＋</span><span class="qz-slot" id="qzSlot">?</span></div>' +
-      '<div class="qz-choices">' +
-        choices.map(c => '<button class="qz-choice" onclick="advCombine(\'' + c + '\')">' + c + '</button>').join("") +
-      '</div>' +
-      '<button class="dk-replay qz-replay" onclick="advReplayTarget()">🔊 再聽合起來的音</button>';
-    setTimeout(() => speak(getRobotSpeakText(stage, sym.z), 0.7), 260);
-  } else {
-    const distract = advDistractors(stage, sym.z, 2);
-    const choices = shuffle([sym.z, ...distract]);
-    advState.quiz = { idx, type: "pick", correct: sym.z };
-    dock.className = "adv-dock quiz";
-    dock.innerHTML =
-      '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>' +
-      '<div class="qz-choices">' +
-        choices.map(c => '<button class="qz-choice" data-z="' + c + '" onclick="advAnswer(\'' + c + '\')">' + c + '</button>').join("") +
-      '</div>' +
-      '<button class="dk-replay qz-replay" onclick="advReplayTarget()">🔊 再聽一次</button>';
-    setTimeout(() => speak(getRobotSpeakText(stage, sym.z), 0.7), 260);
+    correct = sym.z.slice(1);
+    const choices = shuffle([correct, ...shuffle(ALL_FINALS.filter(f => f !== correct)).slice(0, 2)]);
+    promptHTML = '<div class="qz-prompt">幫 <b>' + medial + '</b> 找朋友，合起來念「' + sym.ex + '」</div>';
+    comboHTML = '<div class="qz-combine"><span class="qz-medial">' + medial + '</span><span class="qz-plus">＋</span><span class="qz-slot" id="qzSlot">?</span></div>';
+    choicesHTML = advChoicesHTML(choices);
+  } else if (type === "combo") {
+    correct = sym.z;
+    const otherCombined = ROBOT_STAGE_META.combined.list().map(s => s.z).filter(z => z !== sym.z);
+    const choices = shuffle([sym.z, ...shuffle(otherCombined).slice(0, 2)]);
+    promptHTML = '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>';
+    choicesHTML = advChoicesHTML(choices);
+  } else if (type === "medial") {
+    const medial = sym.z[0];
+    correct = medial;
+    const choices = shuffle([medial, ...MEDIALS.filter(m => m !== medial)]);
+    promptHTML = '<div class="qz-prompt">「' + sym.ex + '」<span class="qz-tip">' + sym.z + '</span><br>是用哪個開頭？</div>';
+    choicesHTML = advChoicesHTML(choices);
   }
+
+  advState.quiz = { idx, type, correct, target: sym.z };
+  dock.className = "adv-dock quiz" + (stage === "combined" ? " combined" : "") + (type === "catch" ? " catch" : "");
+  dock.innerHTML =
+    promptHTML + comboHTML +
+    '<div class="qz-choices">' + choicesHTML + '</div>' +
+    '<button class="dk-replay qz-replay" onclick="advReplayTarget()">🔊 再聽一次</button>';
+
+  setTimeout(() => speak(getRobotSpeakText(stage, sym.z), 0.7), 260);
 }
 
 function advReplayTarget() {
   if (!advState.quiz) return;
-  const idx = advState.quiz.idx;
-  speak(getRobotSpeakText(advState.stage, advState.symbols[idx].z), 0.7);
+  speak(getRobotSpeakText(advState.stage, advState.symbols[advState.quiz.idx].z), 0.7);
 }
 
-function advAnswer(picked) {
-  if (!advState.quiz || advState.quiz.type !== "pick") return;
+function advPick(value) {
   const q = advState.quiz;
-  const btn = document.querySelector('.qz-choice[data-z="' + picked + '"]');
-  if (picked === q.correct) {
+  if (!q) return;
+  const btns = Array.from(document.querySelectorAll(".qz-choice"));
+  const btn = btns.find(b => b.dataset.val === value);
+
+  if (value === q.correct) {
+    btns.forEach(b => { b.disabled = true; b.classList.remove("drift"); });
     if (btn) btn.classList.add("qz-reveal");
     celebrateCorrect(btn);
     advState.quiz = null;
-    advQuizCorrect(q.idx, advState.quizMissed);
+    if (q.type === "blend") {
+      const slot = document.getElementById("qzSlot");
+      if (slot) slot.textContent = value;
+      setTimeout(() => {
+        const c = document.querySelector(".qz-combine");
+        if (c) c.innerHTML = '<span class="qz-result">' + q.target + '</span>';
+        speak(getRobotSpeakText("combined", q.target), 0.7);
+      }, 280);
+      setTimeout(() => advQuizCorrect(q.idx, advState.quizMissed), 1150);
+    } else {
+      advQuizCorrect(q.idx, advState.quizMissed);
+    }
   } else {
     advState.quizMissed = true;
-    if (!isReview()) addReview(q.correct);
+    if (!isReview()) addReview(advState.symbols[q.idx].z);
     celebrateWrong(btn);
-    if (btn) { btn.disabled = true; btn.classList.add("qz-wrong"); }
-    const cBtn = document.querySelector('.qz-choice[data-z="' + q.correct + '"]');
+    if (btn) { btn.disabled = true; btn.classList.remove("drift"); btn.classList.add("qz-wrong"); }
+    const cBtn = btns.find(b => b.dataset.val === q.correct);
     if (cBtn) cBtn.classList.add("qz-reveal");
     speak("再聽一次：" + getRobotSpeakText(advState.stage, advState.symbols[q.idx].z), 0.68);
-  }
-}
-
-function advCombine(part) {
-  if (!advState.quiz || advState.quiz.type !== "combine") return;
-  const q = advState.quiz;
-  const btns = Array.from(document.querySelectorAll(".qz-choice"));
-  if (part === q.correct) {
-    const slot = document.getElementById("qzSlot");
-    if (slot) slot.textContent = part;
-    celebrateCorrect(slot);
-    advState.quiz = null;
-    setTimeout(() => {
-      const combineEl = document.querySelector(".qz-combine");
-      if (combineEl) combineEl.innerHTML = '<span class="qz-result">' + q.target + '</span>';
-      speak(getRobotSpeakText("combined", q.target), 0.7);
-    }, 280);
-    setTimeout(() => advQuizCorrect(q.idx, advState.quizMissed), 1150);
-  } else {
-    advState.quizMissed = true;
-    if (!isReview()) addReview(q.target);
-    const wrongBtn = btns.find(b => b.textContent === part);
-    celebrateWrong(wrongBtn);
-    if (wrongBtn) { wrongBtn.disabled = true; wrongBtn.classList.add("qz-wrong"); }
-    const cBtn = btns.find(b => b.textContent === q.correct);
-    if (cBtn) cBtn.classList.add("qz-reveal");
-    speak("再聽一次：" + getRobotSpeakText("combined", q.target), 0.68);
   }
 }
 
@@ -2718,8 +2760,7 @@ window.pickRobotChoice = pickRobotChoice;
 window.advReplay = advReplay;
 window.advTapStation = advTapStation;
 window.advStartQuiz = advStartQuiz;
-window.advAnswer = advAnswer;
-window.advCombine = advCombine;
+window.advPick = advPick;
 window.advReplayTarget = advReplayTarget;
 window.advRecord = advRecord;
 renderHome();
