@@ -868,6 +868,32 @@
   .wp-done { background:linear-gradient(165deg,var(--accent-2),var(--accent)); color:#fffdf8; box-shadow:0 8px 18px rgba(255,140,66,.3); }
   .wp-btn:active { transform:translateY(2px) scale(.98); }
   .dk-write { background:#fff0e0 !important; color:#c2671f !important; }
+  /* 寫字練習入口 + 遊戲畫面 */
+  .write-entry {
+    background: linear-gradient(160deg, rgba(255,248,238,.95), rgba(255,238,214,.92));
+    color: var(--text-main); border:1px solid rgba(255,255,255,.84);
+    border-radius:24px; padding:20px 24px; margin:0 10px 24px; width:calc(100% - 20px);
+    display:flex; align-items:center; gap:16px; cursor:pointer; box-shadow:var(--shadow-soft); text-align:left;
+  }
+  .write-entry:active { transform:translateY(2px) scale(.99); }
+  .wg-head { text-align:center; margin:6px 0 12px; }
+  .wg-level { display:inline-block; background:#fff3e2; color:#a45d2b; font-weight:900; font-size:15px; padding:5px 16px; border-radius:999px; }
+  .wg-target { font-size:22px; font-weight:800; color:#33415c; margin-top:12px; }
+  .wg-target b { font-size:34px; color:#a45d2b; margin:0 4px; }
+  .wg-hear { background:#fbe6c2; border:none; border-radius:50%; width:38px; height:38px; font-size:18px; cursor:pointer; vertical-align:middle; }
+  .wg-actions { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+  .wg-progress { width:min(76vw,300px); margin:14px auto 0; height:12px; background:rgba(255,255,255,.7); border-radius:999px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,.08); }
+  .wg-progress-fill { height:100%; background:linear-gradient(90deg,#ffd79b,#ff8f45); border-radius:999px; transition:width .4s; }
+  .wg-levelcards { display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:10px; max-width:640px; margin:20px auto; }
+  .wg-card { background:linear-gradient(165deg,#fff,#f7f1e7); border-radius:24px; padding:26px 18px; text-align:center; cursor:pointer; box-shadow:var(--shadow-soft); border:1px solid rgba(255,255,255,.84); }
+  .wg-card:active { transform:translateY(2px) scale(.99); }
+  .wg-card.locked { opacity:.5; cursor:not-allowed; }
+  .wg-card .wgc-emoji { font-size:54px; }
+  .wg-card h3 { font-size:22px; color:#25324a; margin:8px 0 4px; }
+  .wg-card p { font-size:14px; color:#6c7d98; line-height:1.4; }
+  .wg-card .wgc-prog { margin-top:10px; font-size:14px; font-weight:800; color:#a45d2b; }
+  .wg-card.locked .wgc-prog::after { content:" 🔒 先完成第一關"; color:#999; font-weight:400; }
+  @media (max-width:560px){ .wg-levelcards { grid-template-columns:1fr; } }
 
   @keyframes robotHop {
     0%, 100% { transform: translateY(0); }
@@ -1061,10 +1087,11 @@ function loadState() {
           combined: ((base.robot && base.robot.collected && base.robot.collected.combined) || []).filter(Boolean),
         },
         mastery: (base.robot && base.robot.mastery) || { initials: {}, finals: {}, combined: {} }
-      }
+      },
+      writing: (base.writing) || { done: { "1": [], "2": [] } }
     };
   } catch {
-    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } } };
+    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } }, writing: { done: { "1": [], "2": [] } } };
   }
 }
 function saveState() {
@@ -2296,6 +2323,14 @@ function renderHome() {
         </div>
       </button>
 
+      <button class="write-entry" onclick="renderWritingLevels()">
+        <div class="ae-emoji">✍️</div>
+        <div>
+          <div class="ae-title">寫字練習</div>
+          <div class="ae-desc">第一關跟著筆順描 → 第二關自己默寫 · 教育部官方筆順</div>
+        </div>
+      </button>
+
       <div class="level-grid">
         ${LEVELS.map((lv, i) => {
           const stars = state.levels[lv.id] || 0;
@@ -2328,7 +2363,7 @@ function renderHome() {
 
 function resetProgress() {
   if (confirm("確定要重來嗎？所有星星會歸零")) {
-    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } } };
+    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } }, writing: { done: { "1": [], "2": [] } } };
     saveState();
     renderHome();
   }
@@ -2914,6 +2949,144 @@ function closeWriting() {
   _wpState = null;
 }
 
+// ===== 寫字練習遊戲（第一關跟著描 / 第二關自己寫）=====
+let _wgState = null;
+function getWriteSet() {
+  return [...ROBOT_STAGE_META.initials.list(), ...ROBOT_STAGE_META.finals.list()];
+}
+
+function renderWritingLevels() {
+  if (_wpState) closeWriting();
+  const set = getWriteSet();
+  const total = set.length;
+  const l1 = state.writing.done["1"].length;
+  const l2 = state.writing.done["2"].length;
+  const l2locked = l1 < total;
+  const app = document.getElementById("app");
+  app.innerHTML =
+    '<div class="topbar">' +
+      '<button onclick="renderHome()">← 回地圖</button>' +
+      '<div class="right-group"><button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button><div class="stars">⭐ ' + state.totalStars + '</div></div>' +
+    '</div>' +
+    '<div class="alphabet-page"><h1>✍️ 寫字練習</h1>' +
+    '<div class="alphabet-subtitle">用教育部官方筆順，學會自己寫注音</div></div>' +
+    '<div class="wg-levelcards">' +
+      '<div class="wg-card" onclick="startWritingGame(1)">' +
+        '<div class="wgc-emoji">🖌️</div><h3>第一關 · 跟著描</h3>' +
+        '<p>有淡淡的字 + 看筆順動畫<br>跟著一筆一筆描</p>' +
+        '<div class="wgc-prog">' + l1 + ' / ' + total + '</div></div>' +
+      '<div class="wg-card ' + (l2locked ? "locked" : "") + '" onclick="' + (l2locked ? "" : "startWritingGame(2)") + '">' +
+        '<div class="wgc-emoji">✏️</div><h3>第二關 · 自己寫</h3>' +
+        '<p>沒有字了！<br>聽聲音自己默寫出來</p>' +
+        '<div class="wgc-prog">' + l2 + ' / ' + total + '</div></div>' +
+    '</div>' +
+    '<div class="parent-note" style="max-width:640px;margin:10px auto">' +
+      '<strong>給家長：</strong>先玩第一關「跟著描」熟悉每個字的筆順與形狀，全部描過後解鎖第二關「自己寫」做默寫練習。手機用手指寫最自然。</strong></div>';
+}
+
+function startWritingGame(level) {
+  const set = getWriteSet();
+  const lvl = String(level);
+  if (level === 2 && state.writing.done["1"].length < set.length) return;
+  let pos = set.findIndex(it => !state.writing.done[lvl].includes(it.z));
+  if (pos < 0) pos = 0; // 全完成→從頭複習
+  _wgState = { level, set, pos, peekT: null };
+  renderWritingGame();
+}
+
+function renderWritingGame() {
+  const { level, set, pos } = _wgState;
+  const item = set[pos];
+  const ch = item.z;
+  const total = set.length;
+  const app = document.getElementById("app");
+  app.innerHTML =
+    '<div class="topbar">' +
+      '<button onclick="renderWritingLevels()">← 返回</button>' +
+      '<div class="right-group"><button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button><div class="stars">' + (pos + 1) + ' / ' + total + '</div></div>' +
+    '</div>' +
+    '<div class="wg-head">' +
+      '<div class="wg-level">' + (level === 1 ? "第一關 · 跟著描" : "第二關 · 自己寫") + '</div>' +
+      '<div class="wg-target">寫寫看：<b>' + ch + '</b>（' + item.emo + item.ex + '）<button class="wg-hear" onclick="speak(\'' + ch + '\',0.7)">🔊</button></div>' +
+    '</div>' +
+    '<div class="writing-pad" id="wpPad">' +
+      '<div class="wp-grid"></div>' +
+      '<svg class="wp-guide" id="wpGuide" viewBox="0 0 2048 2048" preserveAspectRatio="xMidYMid meet"></svg>' +
+      '<svg class="wp-demo" id="wpDemo" viewBox="0 0 2048 2048" preserveAspectRatio="xMidYMid meet"></svg>' +
+      '<canvas class="wp-canvas" id="wpCanvas"></canvas>' +
+      '<div class="wp-badge" id="wpBadge"></div>' +
+    '</div>' +
+    '<div class="wg-progress"><div class="wg-progress-fill" style="width:' + ((pos) / total * 100) + '%"></div></div>' +
+    '<div class="wg-actions">' +
+      (level === 1
+        ? '<button class="wp-btn wp-demo-btn" onclick="playStrokeDemo()">👀 看筆順</button>'
+        : '<button class="wp-btn wp-demo-btn" onclick="writingPeek()">👁 偷看一下</button>') +
+      '<button class="wp-btn wp-clear" onclick="clearWriting()">🗑 清除</button>' +
+      '<button class="wp-btn wp-done" onclick="writingGameNext()">✓ 我寫好了</button>' +
+    '</div>';
+
+  _wpState = { chars: [ch], idx: 0 };
+  const guideEl = document.getElementById("wpGuide");
+  if (level === 1) {
+    guideEl.innerHTML = '<path d="' + window.ZHUYIN_STROKES[ch].map(s => s.d).join(" ") + '" fill="#e7e2d8"/>';
+  } else {
+    guideEl.innerHTML = "";
+  }
+  setupWritingCanvas();
+  speak(ch, 0.7);
+  if (level === 1) setTimeout(playStrokeDemo, 550);
+}
+
+function writingPeek() {
+  if (!_wpState) return;
+  const ch = _wpState.chars[0];
+  const g = document.getElementById("wpGuide");
+  if (g) g.innerHTML = '<path d="' + window.ZHUYIN_STROKES[ch].map(s => s.d).join(" ") + '" fill="#ece1d0"/>';
+  playStrokeDemo();
+  if (_wgState.peekT) clearTimeout(_wgState.peekT);
+  _wgState.peekT = setTimeout(() => {
+    const gg = document.getElementById("wpGuide"); if (gg) gg.innerHTML = "";
+    const dd = document.getElementById("wpDemo"); if (dd) dd.innerHTML = "";
+  }, 3500);
+}
+
+function writingGameNext() {
+  if (!_wgState) return;
+  const { level, set, pos } = _wgState;
+  const ch = set[pos].z;
+  const lvl = String(level);
+  if (!state.writing.done[lvl].includes(ch)) state.writing.done[lvl].push(ch);
+  saveState();
+  celebrateBurst();
+  speak("好棒", 0.85);
+  if (navigator.vibrate) navigator.vibrate(40);
+  _wgState.pos++;
+  if (_wgState.pos >= set.length) {
+    setTimeout(() => showWritingComplete(level), 750);
+  } else {
+    setTimeout(renderWritingGame, 750);
+  }
+}
+
+function showWritingComplete(level) {
+  celebrateBurst();
+  speak("太厲害了！全部寫完了！");
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  const nextBtn = level === 1
+    ? '<button onclick="this.closest(\'.modal\').remove();startWritingGame(2)">挑戰第二關 ✏️</button>'
+    : '<button onclick="this.closest(\'.modal\').remove();renderHome()">回首頁</button>';
+  modal.innerHTML =
+    '<div class="modal-content">' +
+      '<div class="robot-flair">' + (level === 1 ? "🖌️✨" : "👑✨") + '</div>' +
+      '<h2>' + (level === 1 ? "第一關完成！" : "第二關完成！你會自己寫了！") + '</h2>' +
+      '<p>' + (level === 1 ? "你把每個字都描過一遍，解鎖第二關「自己寫」！" : "太棒了，注音都會自己寫了！") + '</p>' +
+      nextBtn +
+      '<button class="secondary" onclick="this.closest(\'.modal\').remove();renderWritingLevels()">回寫字選單</button>' +
+    '</div>';
+  document.body.appendChild(modal);
+}
+
 window.startLevel = startLevel;
 window.answerLv1 = answerLv1;
 window.answerLv2 = answerLv2;
@@ -2933,6 +3106,11 @@ window.advTapStation = advTapStation;
 window.advStartQuiz = advStartQuiz;
 window.advPick = advPick;
 window.advWrite = advWrite;
+window.renderWritingLevels = renderWritingLevels;
+window.startWritingGame = startWritingGame;
+window.writingPeek = writingPeek;
+window.writingGameNext = writingGameNext;
+window.showWritingComplete = showWritingComplete;
 window.openWritingFor = openWritingFor;
 window.playStrokeDemo = playStrokeDemo;
 window.clearWriting = clearWriting;
