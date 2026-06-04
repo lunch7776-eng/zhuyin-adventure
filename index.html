@@ -1085,12 +1085,13 @@ function loadState() {
           finals: ((base.robot && base.robot.collected && base.robot.collected.finals) || []).filter(Boolean),
           combined: ((base.robot && base.robot.collected && base.robot.collected.combined) || []).filter(Boolean),
         },
-        mastery: (base.robot && base.robot.mastery) || { initials: {}, finals: {}, combined: {} }
+        mastery: (base.robot && base.robot.mastery) || { initials: {}, finals: {}, combined: {} },
+        mem: (base.robot && base.robot.mem) || {}
       },
       writing: (base.writing) || { done: { "1": [], "2": [] } }
     };
   } catch {
-    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } }, writing: { done: { "1": [], "2": [] } } };
+    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} }, mem: {} }, writing: { done: { "1": [], "2": [] } } };
   }
 }
 function saveState() {
@@ -1704,9 +1705,13 @@ function startRobotExplore() {
   const stage = state.robot.stage;
   const symbols = ROBOT_STAGE_META[stage].list();
   const collected = state.robot.collected[stage];
-  if (collected.length >= symbols.length) return showRobotStageComplete();
-
   advState = { stage, symbols, walking: false, boboX: 0, L: null, vpW: 0 };
+  if (collected.length >= symbols.length) {
+    // 初次都學過了 → 看有沒有還沒精熟(s<2)的，有就重現複習，沒有才過關
+    const weak = symbols.filter(s => getMem(s.z).s < 2);
+    if (weak.length === 0) return showRobotStageComplete();
+    advState.resurface = true;  // 進場景後直接複習弱項
+  }
   renderAdventure();
 }
 
@@ -1848,6 +1853,11 @@ function advBuildWorld(targetIdx) {
 
   advState.boboX = L.stations[targetIdx].x;
   advApplyCamera(false);
+  if (advState.resurface) {
+    advState.resurface = false;
+    setTimeout(advStartReview, 500);  // 跨 session：直接複習未精熟的字
+    return;
+  }
   advRenderDock(targetIdx);
   setTimeout(() => speak(getRobotSpeakText(stage, advState.symbols[targetIdx].z)), 360);
 }
@@ -2023,7 +2033,7 @@ function advPick(value) {
     }
   } else {
     advState.quizMissed = true;
-    if (!isReview()) addReview(advState.symbols[q.idx].z);
+    bumpMem(advState.symbols[q.idx].z, false);  // 答錯→記憶強度-1，會再回來
     celebrateWrong(btn);
     if (btn) { btn.disabled = true; btn.classList.remove("drift"); btn.classList.add("qz-wrong"); }
     const cBtn = btns.find(b => b.dataset.val === q.correct);
@@ -2038,18 +2048,13 @@ function advQuizCorrect(idx, wasMissed) {
   // 答對才還原站牌符號
   const _rd = document.querySelector('.adv-station[data-i="' + idx + '"] .st-disc');
   if (_rd && _rd.dataset.real) { _rd.textContent = _rd.dataset.real; delete _rd.dataset.real; }
-  if (!state.robot.mastery) state.robot.mastery = { initials: {}, finals: {}, combined: {} };
-  const m = state.robot.mastery[stage] || (state.robot.mastery[stage] = {});
-  if (!wasMissed) m[sym.z] = (m[sym.z] || 0) + 1;  // 只有第一次就答對才算「精熟分」
+  bumpMem(sym.z, true);  // 答對→記憶強度+1
   if (!state.robot.collected[stage].includes(sym.z)) state.robot.collected[stage].push(sym.z);
   saveState();
 
   if (isReview()) {
-    if (!wasMissed) {} // review correct also could bump, but keep simple
-    m[sym.z] = (m[sym.z] || 0) + 1;
     playRobotAnim("happy");
     speak("答對了！" + sym.z);
-    advState.reviewBag = (advState.reviewBag || []).filter(z => z !== sym.z);
     setTimeout(advNextReview, 950);
     return;
   }
@@ -2060,7 +2065,7 @@ function advQuizCorrect(idx, wasMissed) {
   if (stEl) {
     stEl.classList.remove("current", "future");
     stEl.classList.add("done");
-    if ((m[sym.z] || 0) >= 2) stEl.classList.add("mastered");
+    if (getMem(sym.z).s >= 2) stEl.classList.add("mastered");
   }
   advUpdateProgress();
 
@@ -2072,34 +2077,52 @@ function advQuizCorrect(idx, wasMissed) {
   }
 }
 
+// ---- 記憶引擎（spaced repetition + mastery）----
+function getMem(z) {
+  if (!state.robot.mem) state.robot.mem = {};
+  if (!state.robot.mem[z]) state.robot.mem[z] = { s: 0, c: 0, w: 0 };
+  return state.robot.mem[z];
+}
+function bumpMem(z, correct) {
+  const m = getMem(z);
+  if (correct) { m.s = Math.min(3, m.s + 1); m.c++; }
+  else { m.s = Math.max(0, m.s - 1); m.w++; }
+  saveState();
+}
+function zoneWeak() {  // 該區還沒精熟(s<2)的字
+  return advState.symbols.filter(s => getMem(s.z).s < 2).map(s => s.z);
+}
+
 // ---- 複習關（間隔複習答錯的）----
 function advAfterZone() {
-  if (advState.reviewBag && advState.reviewBag.length > 0) {
-    advStartReview();
-  } else {
-    showRobotStageComplete();
-  }
+  if (zoneWeak().length > 0) advStartReview();
+  else showRobotStageComplete();
 }
 
 function advStartReview() {
   advState.phase = "review";
+  advState.reviewCount = 0;
+  advState.reviewCap = 14;  // 複習題數上限，避免太長
   celebrateBurst();
   const banner = document.querySelector(".adv-banner .azone");
   if (banner) banner.textContent = "🔁 複習時間！";
-  speak("我們再玩一次剛剛比較難的！");
+  speak("我們再練一次比較不熟的！");
   setTimeout(advNextReview, 800);
 }
 
 function advNextReview() {
-  if (!advState.reviewBag || advState.reviewBag.length === 0) {
+  const weak = zoneWeak();
+  if (weak.length === 0 || (advState.reviewCount || 0) >= (advState.reviewCap || 14)) {
     const banner = document.querySelector(".adv-banner .azone");
     if (banner) banner.textContent = EXPLORE_ZONE_META[advState.stage].name;
     setTimeout(showRobotStageComplete, 500);
     return;
   }
-  const z = advState.reviewBag[0];
+  advState.reviewCount = (advState.reviewCount || 0) + 1;
+  // 輪替挑選未精熟字（interleaving）
+  const z = weak[advState.reviewCount % weak.length];
   const idx = advState.symbols.findIndex(s => s.z === z);
-  if (idx < 0) { advState.reviewBag.shift(); return advNextReview(); }
+  if (idx < 0) return advNextReview();
   advState.phase = "review";
   advStartQuiz(idx);
 }
@@ -2370,7 +2393,7 @@ function renderHome() {
 
 function resetProgress() {
   if (confirm("確定要重來嗎？所有星星會歸零")) {
-    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} } }, writing: { done: { "1": [], "2": [] } } };
+    state = { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} }, mem: {} }, writing: { done: { "1": [], "2": [] } } };
     saveState();
     renderHome();
   }
