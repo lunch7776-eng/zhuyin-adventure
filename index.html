@@ -674,9 +674,9 @@
     isolation: isolate;
     background: linear-gradient(180deg,#a9d8f0 0%,#cdeafb 58%,#e9f6ff 100%);
   }
-  .adv-viewport.zone-initials { background: linear-gradient(180deg,#a6d6ef 0%,#cbe9fb 56%,#eaf7ff 100%); }
-  .adv-viewport.zone-finals   { background: linear-gradient(180deg,#bfe2d6 0%,#d9efe4 56%,#eef8f1 100%); }
-  .adv-viewport.zone-combined { background: linear-gradient(180deg,#ffd6a4 0%,#ffe7c6 44%,#cfe9f1 100%); }
+  .adv-viewport.zone-initials { background: url('assets/bg-initials.png') center bottom / cover no-repeat, linear-gradient(180deg,#a6d6ef,#eaf7ff); }
+  .adv-viewport.zone-finals   { background: url('assets/bg-finals.png') center bottom / cover no-repeat, linear-gradient(180deg,#bfe2d6,#eef8f1); }
+  .adv-viewport.zone-combined { background: url('assets/bg-combined.png') center bottom / cover no-repeat, linear-gradient(180deg,#ffd6a4,#cfe9f1); }
 
   .adv-layer {
     position:absolute; top:0; bottom:0; left:0;
@@ -1832,10 +1832,10 @@ function advBuildWorld(targetIdx) {
   const hills = document.getElementById("advHills");
   const field = document.getElementById("advField");
   sky.style.width = hills.style.width = field.style.width = L.worldW + "px";
-  sky.innerHTML = advSkyHTML(stage, L.worldW, vpH);
-  hills.innerHTML = advHillsHTML(stage, L.worldW, vpH);
+  sky.innerHTML = "";   // 改用插畫背景
+  hills.innerHTML = "";
 
-  let fieldHTML = advGroundHTML(stage, L) + advTrailHTML(L);
+  let fieldHTML = advTrailHTML(L);  // 地面由插畫提供
   fieldHTML += L.stations.map(st => {
     const done = collected.includes(st.z);
     const cls = done ? "done" : (st.i === targetIdx ? "current" : (st.i < targetIdx ? "done" : "future"));
