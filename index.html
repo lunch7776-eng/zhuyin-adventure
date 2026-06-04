@@ -735,6 +735,11 @@
   .adv-robot img { width:100%; height:100%; object-fit:contain; object-position:center bottom; }
   .adv-robot.flip img { transform: scaleX(-1); }
   .adv-robot.walk img { animation: advWalk .34s ease-in-out infinite; }
+  .adv-robot:not(.walk):not(.flip) img { animation: boboIdle 3.2s ease-in-out infinite; }
+  @keyframes boboIdle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-5px) rotate(-1deg); }
+  }
   @keyframes advWalk {
     0%,100% { transform: translateY(0) rotate(0deg); }
     25%     { transform: translateY(-4px) rotate(-3.5deg); }
@@ -783,6 +788,14 @@
     color:#fffdf8; box-shadow: 0 12px 24px rgba(255,140,66,.34);
   }
   .adv-dock button:active { transform: translateY(2px) scale(.98); }
+  .adv-dock .dk-ic {
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    padding:8px 10px; min-width:62px; border-radius:18px;
+  }
+  .adv-dock .dk-ic .dk-ico { font-size: clamp(24px,3.2vw,30px); line-height:1; }
+  .adv-dock .dk-ic .dk-lbl { font-size:11px; font-weight:800; opacity:.85; white-space:nowrap; }
+  .adv-dock .dk-go { transform: scale(1.06); }
+  .adv-dock .dk-go .dk-ico { font-size: clamp(26px,3.6vw,34px); }
 
   .adv-dots {
     max-width: min(96vw,1180px); margin: 6px auto 16px;
@@ -1888,13 +1901,13 @@ function advRenderDock(idx) {
     '<div class="dk-symbol">' + sym.z + '</div>' +
     '<div class="dk-mid">' +
       '<div class="dk-word">' + (sym.emo || "") + ' ' + sym.ex + '</div>' +
-      '<div class="dk-hint">聽 BOBO 念，跟著念一次，準備好就考考你！</div>' +
+      '<div class="dk-hint">👂 聽 → 🗣️ 跟著念 → 🎧 考考你</div>' +
     '</div>' +
     '<div class="dk-actions">' +
-      '<button class="dk-replay" onclick="advReplay()">🔊 再聽</button>' +
-      '<button class="dk-mic" id="dkMic" onclick="advRecord()">🎤 換你念</button>' +
-      '<button class="dk-write" onclick="advWrite()">✍️ 寫寫看</button>' +
-      '<button class="dk-go" onclick="advStartQuiz()">🎧 考考我</button>' +
+      '<button class="dk-ic dk-replay" onclick="advReplay()"><span class="dk-ico">🔊</span><span class="dk-lbl">再聽</span></button>' +
+      '<button class="dk-ic dk-mic" id="dkMic" onclick="advRecord()"><span class="dk-ico">🎤</span><span class="dk-lbl">換你念</span></button>' +
+      '<button class="dk-ic dk-write" onclick="advWrite()"><span class="dk-ico">✍️</span><span class="dk-lbl">寫寫看</span></button>' +
+      '<button class="dk-ic dk-go" onclick="advStartQuiz()"><span class="dk-ico">🎧</span><span class="dk-lbl">考考我</span></button>' +
     '</div>';
 }
 
