@@ -1446,14 +1446,15 @@ const ZHUYIN_TABLE = {
     { z: "ㄩ", ex: "魚", emo: "🐟" },
   ],
   combined: [ // 21 個結合韻 — 依介音分組（ㄧ系 / ㄨ系 / ㄩ系）
-    { z: "ㄧㄚ", ex: "鴨", emo: "🦆" }, { z: "ㄧㄛ", ex: "喲", emo: "❗" },
-    { z: "ㄧㄝ", ex: "葉", emo: "🍂" }, { z: "ㄧㄠ", ex: "腰", emo: "💃" },
+    { z: "ㄧㄚ", ex: "鴨", emo: "🦆" }, { z: "ㄧㄛ", ex: "喲", emo: "😮" },
+    { z: "ㄧㄝ", ex: "葉", emo: "🍂" },
+    { z: "ㄧㄞ", ex: "崖", emo: "⛰️" }, { z: "ㄧㄠ", ex: "腰", emo: "💃" },
     { z: "ㄧㄡ", ex: "油", emo: "🛢️" }, { z: "ㄧㄢ", ex: "鹽", emo: "🧂" },
     { z: "ㄧㄣ", ex: "音", emo: "🎵" }, { z: "ㄧㄤ", ex: "羊", emo: "🐑" },
     { z: "ㄧㄥ", ex: "鷹", emo: "🦅" },
     { z: "ㄨㄚ", ex: "蛙", emo: "🐸" }, { z: "ㄨㄛ", ex: "我", emo: "👋" },
-    { z: "ㄨㄞ", ex: "歪", emo: "🌀" }, { z: "ㄨㄟ", ex: "為", emo: "🌟" },
-    { z: "ㄨㄢ", ex: "彎", emo: "🌙" }, { z: "ㄨㄣ", ex: "文", emo: "📚" },
+    { z: "ㄨㄞ", ex: "歪", emo: "🙃" }, { z: "ㄨㄟ", ex: "為", emo: "🌟" },
+    { z: "ㄨㄢ", ex: "彎", emo: "➰" }, { z: "ㄨㄣ", ex: "文", emo: "📚" },
     { z: "ㄨㄤ", ex: "王", emo: "👑" }, { z: "ㄨㄥ", ex: "翁", emo: "👴" },
     { z: "ㄩㄝ", ex: "月", emo: "🌙" }, { z: "ㄩㄢ", ex: "圓", emo: "⭕" },
     { z: "ㄩㄣ", ex: "雲", emo: "☁️" }, { z: "ㄩㄥ", ex: "用", emo: "✋" },
@@ -1535,10 +1536,10 @@ function playZhuyinCell(el) {
 const LEVELS = [
   {
     id: 1,
-    badge: "Lv 1 · 雙唇音",
+    badge: "Lv 1 · 嘴型",
     emoji: "👄",
     title: "嘴型偵探",
-    desc: "ㄅ ㄆ ㄇ ㄈ — 看嘴巴怎麼動就知道",
+    desc: "全部 37 個注音 — 看嘴巴怎麼動，找出對的字",
     target: 5, // 集 5 顆星過關
   },
   {
@@ -2319,7 +2320,7 @@ function renderHome() {
         <div class="ae-emoji">🔎</div>
         <div>
           <div class="ae-title">注音字典</div>
-          <div class="ae-desc">58 個注音自由探索 · 點任一格聽發音與例字</div>
+          <div class="ae-desc">59 個注音自由探索 · 點任一格聽發音與例字</div>
         </div>
       </button>
 
@@ -2334,7 +2335,7 @@ function renderHome() {
       <div class="level-grid">
         ${LEVELS.map((lv, i) => {
           const stars = state.levels[lv.id] || 0;
-          const locked = i > 0 && (state.levels[LEVELS[i-1].id] || 0) < LEVELS[i-1].target;
+          const locked = false; // 全部解鎖
           const starDisplay = "⭐".repeat(stars) + "☆".repeat(Math.max(0, lv.target - stars));
           return `
             <div class="level-card ${locked ? 'locked' : ''}"
@@ -2373,10 +2374,43 @@ function resetProgress() {
 // 關卡 1：嘴型偵探（雙唇音 ㄅㄆㄇ + ㄈ）
 // =====================================================
 const LV1_BANK = [
-  { zhuyin: "ㄅ", mouthEmoji: "😗", hint: "嘴巴閉緊再爆開 — 像「爸爸」的開頭", example: "爸" },
-  { zhuyin: "ㄆ", mouthEmoji: "😮", hint: "嘴巴閉緊爆開＋吹一口氣 — 像「皮球」的「皮」", example: "皮" },
-  { zhuyin: "ㄇ", mouthEmoji: "🤐", hint: "嘴巴閉著哼鼻子 — 像「媽媽」的開頭", example: "媽" },
-  { zhuyin: "ㄈ", mouthEmoji: "😬", hint: "上面牙齒輕咬下嘴唇 — 像「飛」的開頭", example: "飛" },
+  { zhuyin: "ㄅ", mouthEmoji: "😗", hint: "雙唇閉緊→爆開（爸）", example: "爸" },
+  { zhuyin: "ㄆ", mouthEmoji: "😮", hint: "雙唇爆開＋吹一口氣（皮）", example: "皮" },
+  { zhuyin: "ㄇ", mouthEmoji: "🤐", hint: "閉著嘴用鼻子哼（媽）", example: "媽" },
+  { zhuyin: "ㄈ", mouthEmoji: "😬", hint: "上排牙齒咬下嘴唇（飛）", example: "飛" },
+  { zhuyin: "ㄉ", mouthEmoji: "👅", hint: "舌尖頂上面→彈開（弟）", example: "弟" },
+  { zhuyin: "ㄊ", mouthEmoji: "😮", hint: "舌尖彈開＋吹氣（兔）", example: "兔" },
+  { zhuyin: "ㄋ", mouthEmoji: "👃", hint: "舌尖頂上面＋鼻子哼（牛）", example: "牛" },
+  { zhuyin: "ㄌ", mouthEmoji: "👅", hint: "舌尖頂上面→滑下來（鹿）", example: "鹿" },
+  { zhuyin: "ㄍ", mouthEmoji: "😮", hint: "喉嚨後面頂一下（哥）", example: "哥" },
+  { zhuyin: "ㄎ", mouthEmoji: "💨", hint: "喉嚨頂＋吹氣（苦）", example: "苦" },
+  { zhuyin: "ㄏ", mouthEmoji: "😤", hint: "喉嚨輕輕呼氣（猴）", example: "猴" },
+  { zhuyin: "ㄐ", mouthEmoji: "😁", hint: "嘴角往兩邊拉＋舌面貼（雞）", example: "雞" },
+  { zhuyin: "ㄑ", mouthEmoji: "😁", hint: "嘴角拉開＋吹氣（汽）", example: "汽" },
+  { zhuyin: "ㄒ", mouthEmoji: "😁", hint: "嘴角拉開＋輕輕漏氣（西）", example: "西" },
+  { zhuyin: "ㄓ", mouthEmoji: "👅", hint: "舌頭翹起來頂（豬）", example: "豬" },
+  { zhuyin: "ㄔ", mouthEmoji: "👅", hint: "舌頭翹起來＋吹氣（車）", example: "車" },
+  { zhuyin: "ㄕ", mouthEmoji: "🐍", hint: "舌頭翹起來漏氣（蛇）", example: "蛇" },
+  { zhuyin: "ㄖ", mouthEmoji: "😮", hint: "舌頭翹起來震動（日）", example: "日" },
+  { zhuyin: "ㄗ", mouthEmoji: "😬", hint: "舌頭平平頂牙齒（字）", example: "字" },
+  { zhuyin: "ㄘ", mouthEmoji: "😬", hint: "舌頭平平＋吹氣（醋）", example: "醋" },
+  { zhuyin: "ㄙ", mouthEmoji: "🤫", hint: "舌頭平平輕輕漏氣（絲）", example: "絲" },
+  { zhuyin: "ㄚ", mouthEmoji: "😮", hint: "嘴巴張大大（啊）", example: "啊" },
+  { zhuyin: "ㄛ", mouthEmoji: "😯", hint: "嘴巴圓圓的（喔）", example: "喔" },
+  { zhuyin: "ㄜ", mouthEmoji: "😐", hint: "嘴巴半開（鵝）", example: "鵝" },
+  { zhuyin: "ㄝ", mouthEmoji: "😬", hint: "嘴巴扁扁的（也）", example: "也" },
+  { zhuyin: "ㄞ", mouthEmoji: "😆", hint: "嘴巴大開→變笑（愛）", example: "愛" },
+  { zhuyin: "ㄟ", mouthEmoji: "😁", hint: "嘴巴扁→變笑（黑）", example: "黑" },
+  { zhuyin: "ㄠ", mouthEmoji: "😮", hint: "嘴巴大開→變圓（高）", example: "高" },
+  { zhuyin: "ㄡ", mouthEmoji: "😯", hint: "嘴巴半開→變圓（樓）", example: "樓" },
+  { zhuyin: "ㄢ", mouthEmoji: "😮", hint: "張嘴後舌尖頂上面（安）", example: "安" },
+  { zhuyin: "ㄣ", mouthEmoji: "😐", hint: "半開後鼻子哼（恩）", example: "恩" },
+  { zhuyin: "ㄤ", mouthEmoji: "😮", hint: "張嘴後鼻音拉長（王）", example: "王" },
+  { zhuyin: "ㄥ", mouthEmoji: "😐", hint: "半開後鼻音（鷹）", example: "鷹" },
+  { zhuyin: "ㄦ", mouthEmoji: "👅", hint: "舌頭捲起來（兒）", example: "兒" },
+  { zhuyin: "ㄧ", mouthEmoji: "😁", hint: "嘴巴笑笑扁扁（衣）", example: "衣" },
+  { zhuyin: "ㄨ", mouthEmoji: "😗", hint: "嘴巴嘟起來（屋）", example: "屋" },
+  { zhuyin: "ㄩ", mouthEmoji: "😗", hint: "嘴巴噘成小圓（魚）", example: "魚" },
 ];
 
 let lv1State = null;
@@ -2484,17 +2518,29 @@ const LV2_EXAMPLE = {
 };
 
 let lv2State = null;
+function lv2AllItems() { return [...ZHUYIN_TABLE.initials, ...ZHUYIN_TABLE.finals]; } // 37 個
+function lv2Distractors(z) {
+  const initials = ZHUYIN_TABLE.initials.map(i => i.z);
+  const finals = ZHUYIN_TABLE.finals.map(i => i.z);
+  let pool = (CONFUSION[z] || []).slice();
+  const sameGroup = initials.includes(z) ? initials : finals;
+  const others = shuffle(sameGroup.filter(x => x !== z && !pool.includes(x)));
+  while (pool.length < 2 && others.length) pool.push(others.shift());
+  return pool.slice(0, 2);
+}
 function startLv2() {
   lv2State = { stars: 0, target: LEVELS[1].target };
   nextLv2();
 }
 function nextLv2() {
   if (lv2State.stars >= lv2State.target) return showLevelComplete(2);
-  // 隨機選一組
-  const group = LV2_CONFUSE_GROUPS[Math.floor(Math.random() * LV2_CONFUSE_GROUPS.length)];
-  const correct = group[Math.floor(Math.random() * group.length)];
-  const choices = shuffle([...group]);
+  // 從全部 37 個注音隨機抽，干擾項用易混組
+  const items = lv2AllItems();
+  const target = items[Math.floor(Math.random() * items.length)];
+  const correct = target.z;
+  const choices = shuffle([correct, ...lv2Distractors(correct)]);
   lv2State.correct = correct;
+  const lv2ex = target.ex || "";
 
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -2510,7 +2556,7 @@ function nextLv2() {
       <div class="question-card">
         <div class="emoji-big">👂</div>
         <div class="hint">聽聽看，是哪一個？</div>
-        <button class="speak-btn" onclick="speak('${correct}，${LV2_EXAMPLE[correct]||''}', 0.7)">🔊 再聽一次</button>
+        <button class="speak-btn" onclick="speak('${correct}，${lv2ex}', 0.7)">🔊 再聽一次</button>
       </div>
       <div class="choices">
         ${choices.map(c => `
@@ -2519,7 +2565,7 @@ function nextLv2() {
       </div>
     </div>
   `;
-  setTimeout(() => speak(`${correct}，${LV2_EXAMPLE[correct]||''}`, 0.7), 500);
+  setTimeout(() => speak(`${correct}，${lv2ex}`, 0.7), 500);
 }
 function answerLv2(el, picked, ev) {
   if (picked === lv2State.correct) {
@@ -2961,7 +3007,7 @@ function renderWritingLevels() {
   const total = set.length;
   const l1 = state.writing.done["1"].length;
   const l2 = state.writing.done["2"].length;
-  const l2locked = l1 < total;
+  const l2locked = false; // 解鎖第二關
   const app = document.getElementById("app");
   app.innerHTML =
     '<div class="topbar">' +
