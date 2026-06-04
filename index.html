@@ -1980,6 +1980,10 @@ function advStartQuiz(forceIdx) {
   }
 
   advState.quiz = { idx, type, correct, target: sym.z };
+  // 防作弊：還原所有站牌，再把「現在要考的這站」符號藏成「？」
+  document.querySelectorAll('.adv-station .st-disc[data-real]').forEach(d => { d.textContent = d.dataset.real; delete d.dataset.real; });
+  const _curDisc = document.querySelector('.adv-station[data-i="' + idx + '"] .st-disc');
+  if (_curDisc) { _curDisc.dataset.real = _curDisc.textContent; _curDisc.textContent = "？"; }
   dock.className = "adv-dock quiz" + (stage === "combined" ? " combined" : "") + (type === "catch" ? " catch" : "");
   dock.innerHTML =
     promptHTML + comboHTML +
@@ -2031,6 +2035,9 @@ function advPick(value) {
 function advQuizCorrect(idx, wasMissed) {
   const { stage, symbols } = advState;
   const sym = symbols[idx];
+  // 答對才還原站牌符號
+  const _rd = document.querySelector('.adv-station[data-i="' + idx + '"] .st-disc');
+  if (_rd && _rd.dataset.real) { _rd.textContent = _rd.dataset.real; delete _rd.dataset.real; }
   if (!state.robot.mastery) state.robot.mastery = { initials: {}, finals: {}, combined: {} };
   const m = state.robot.mastery[stage] || (state.robot.mastery[stage] = {});
   if (!wasMissed) m[sym.z] = (m[sym.z] || 0) + 1;  // 只有第一次就答對才算「精熟分」
