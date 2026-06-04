@@ -1677,7 +1677,7 @@ function showTipCard(z) {
   document.querySelectorAll(".tip-card").forEach(e => e.remove());
   const card = document.createElement("div");
   card.className = "tip-card";
-  card.innerHTML = '<img src="assets/tip-' + tip + '.png" alt="" onerror="this.style.display=\'none\'"><div class="tip-text">' + TIP_TEXT[tip] + '</div>';
+  card.innerHTML = '<img src="assets/tip-' + tip + '.jpg" alt="" onerror="this.style.display=\'none\'"><div class="tip-text">' + TIP_TEXT[tip] + '</div>';
   document.body.appendChild(card);
   setTimeout(() => card.remove(), 3600);
 }
