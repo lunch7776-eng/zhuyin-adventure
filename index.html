@@ -128,9 +128,9 @@
     margin-bottom: 10px;
     letter-spacing: .03em;
   }
-  .level-card .emoji { font-size: 56px; line-height: 1; }
+  .level-card .emoji { font-size: 68px; line-height: 1; }
   .level-card h3 { font-size: 24px; margin-top: 10px; color: #20283b; letter-spacing: .03em; }
-  .level-card p { font-size: 14px; color: #61708e; margin-top: 8px; line-height: 1.5; }
+  .level-card p { font-size: 12px; color: #61708e; opacity:.7; margin-top: 6px; line-height: 1.4; }
   .level-card .progress-stars {
     margin-top: 12px;
     font-size: 22px;
@@ -479,9 +479,9 @@
     text-align: left;
   }
   .alphabet-entry:active { transform: translateY(2px) scale(.98); }
-  .alphabet-entry .ae-emoji { font-size: 48px; line-height: 1; }
-  .alphabet-entry .ae-title { font-size: 22px; font-weight: 900; }
-  .alphabet-entry .ae-desc { font-size: 14px; opacity: 0.95; margin-top: 4px; }
+  .alphabet-entry .ae-emoji { font-size: 64px; line-height: 1; }
+  .alphabet-entry .ae-title { font-size: 24px; font-weight: 900; }
+  .alphabet-entry .ae-desc { font-size: 12px; opacity: 0.6; margin-top: 3px; }
   .robot-entry {
     background: linear-gradient(145deg, #fffdfa 0%, #f6eee0 100%);
     color: var(--text-main);
@@ -498,9 +498,9 @@
     text-align: left;
   }
   .robot-entry:active { transform: translateY(2px) scale(.98); }
-  .robot-entry .re-emoji { font-size: 48px; line-height: 1; }
+  .robot-entry .re-emoji { font-size: 56px; line-height: 1; }
   .robot-entry .re-title { font-size: 26px; font-weight: 900; letter-spacing: .03em; }
-  .robot-entry .re-desc { font-size: 14px; color: #5e6b85; margin-top: 4px; }
+  .robot-entry .re-desc { font-size: 12px; color: #5e6b85; opacity:.75; margin-top: 3px; }
   .robot-entry .re-progress {
     margin-top: 8px;
     width: 100%;
@@ -880,6 +880,16 @@
   .wp-done { background:linear-gradient(165deg,var(--accent-2),var(--accent)); color:#fffdf8; box-shadow:0 8px 18px rgba(255,140,66,.3); }
   .wp-btn:active { transform:translateY(2px) scale(.98); }
   .dk-write { background:#fff0e0 !important; color:#c2671f !important; }
+  /* 易混音助憶提示卡 */
+  .tip-card {
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    background:linear-gradient(165deg,#fff,#fff6ea); border:2px solid #ffe0b8;
+    border-radius:22px; padding:12px 14px; box-shadow:var(--shadow-pop);
+    z-index:300; max-width:min(90vw,360px); display:flex; align-items:center; gap:12px;
+    animation:advDockIn .35s cubic-bezier(.2,.86,.22,1.06);
+  }
+  .tip-card img { width:96px; height:72px; object-fit:cover; border-radius:14px; flex-shrink:0; }
+  .tip-card .tip-text { font-size:15px; font-weight:800; color:#5a4a32; line-height:1.4; }
   /* 寫字練習入口 + 遊戲畫面 */
   .write-entry {
     background: linear-gradient(160deg, rgba(255,248,238,.95), rgba(255,238,214,.92));
@@ -1257,6 +1267,17 @@ function speakTTSSegment(text, rate, onDone) {
 // 主 speak()：智慧切割 — 注音字元用官方錄音，其他用 TTS
 // 例：speak("ㄅ，爸爸") → 先播官方 ㄅ 錄音，再 TTS 念「爸爸」
 // 例：speak("ㄆㄧㄥˊ，蘋果") → 官方 ㄆ＋ㄧ＋ㄥ → TTS「蘋果」
+// 結合韻整塊發音（取代逐符號滑音，特別是變音韻 ㄧㄢ/ㄩㄢ 等）
+const COMBINED_AUDIO = new Set(["ㄧㄚ","ㄧㄛ","ㄧㄝ","ㄧㄞ","ㄧㄠ","ㄧㄡ","ㄧㄢ","ㄧㄣ","ㄧㄤ","ㄧㄥ","ㄨㄚ","ㄨㄛ","ㄨㄞ","ㄨㄟ","ㄨㄢ","ㄨㄣ","ㄨㄤ","ㄨㄥ","ㄩㄝ","ㄩㄢ","ㄩㄣ","ㄩㄥ"]);
+function combinedKey(s) { return Array.from(s).map(c => c.charCodeAt(0)).join("_"); }
+function playCombinedUnit(s, onDone) {
+  const url = "audio/combined/" + (settings.gender || "female") + "/" + combinedKey(s) + ".mp3";
+  const a = new Audio(url); currentAudio = a;
+  a.onended = onDone;
+  a.onerror = () => playOfficialSequence(Array.from(s), onDone);  // 失敗→退回滑音
+  a.play().catch(() => { if (a.onerror) a.onerror(); });
+}
+
 function speak(text, rate = 0.85) {
   stopAllAudio();
   if (!text) return;
@@ -1284,7 +1305,11 @@ function speak(text, rate = 0.85) {
     if (idx >= segments.length) return;
     const seg = segments[idx++];
     if (seg.type === "audio") {
-      playOfficialSequence(seg.text.split(""), playNext);
+      if (seg.text.length >= 2 && COMBINED_AUDIO.has(seg.text)) {
+        playCombinedUnit(seg.text, playNext);   // 結合韻整塊念
+      } else {
+        playOfficialSequence(seg.text.split(""), playNext);
+      }
     } else {
       // TTS 段 → 預錄 mp3 優先，失敗 fallback SpeechSynthesis
       speakTTSSegment(seg.text, rate, playNext);
@@ -1632,6 +1657,31 @@ function getRobotAccessoryLevel() {
   if (stage1Done) return 1;
   return 0;
 }
+// BOBO 難過表情（答錯時短暫顯示）
+function playRobotSad() {
+  const img = document.getElementById("robotImg");
+  if (!img) return;
+  img.src = "assets/robot-bobo-sad.png";
+  if (_robotAnimTimer) { clearInterval(_robotAnimTimer); _robotAnimTimer = null; }
+  setTimeout(() => { const i = document.getElementById("robotImg"); if (i) i.src = ROBOT_IDLE_SRC; }, 1600);
+}
+// 易混音助憶提示卡
+const TIP_FOR = {
+  "ㄆ":"air","ㄊ":"air","ㄎ":"air","ㄑ":"air",
+  "ㄓ":"tongue","ㄔ":"tongue","ㄕ":"tongue","ㄗ":"tongue","ㄘ":"tongue","ㄙ":"tongue",
+  "ㄋ":"nose","ㄌ":"nose","ㄇ":"nose"
+};
+const TIP_TEXT = { air:"送氣音會吹動面紙喔！", tongue:"翹舌往上捲、平舌貼下排牙", nose:"鼻音捏住鼻子就念不出來" };
+function showTipCard(z) {
+  const tip = TIP_FOR[z]; if (!tip) return;
+  document.querySelectorAll(".tip-card").forEach(e => e.remove());
+  const card = document.createElement("div");
+  card.className = "tip-card";
+  card.innerHTML = '<img src="assets/tip-' + tip + '.png" alt="" onerror="this.style.display=\'none\'"><div class="tip-text">' + TIP_TEXT[tip] + '</div>';
+  document.body.appendChild(card);
+  setTimeout(() => card.remove(), 3600);
+}
+
 // 主視覺 PNG 路徑（生成的 Pixar 風 BOBO）
 const ROBOT_IDLE_SRC = "assets/robot-bobo.png";
 // 各 mood 動畫的幀數（PNG 切好放在 assets/sprite/{name}/01.png ~ NN.png）
@@ -2050,6 +2100,8 @@ function advPick(value) {
   } else {
     advState.quizMissed = true;
     bumpMem(advState.symbols[q.idx].z, false);  // 答錯→記憶強度-1，會再回來
+    playRobotSad();
+    showTipCard(advState.symbols[q.idx].z);
     celebrateWrong(btn);
     if (btn) { btn.disabled = true; btn.classList.remove("drift"); btn.classList.add("qz-wrong"); }
     const cBtn = btns.find(b => b.dataset.val === q.correct);
