@@ -1951,34 +1951,37 @@ function advStartQuiz(forceIdx) {
   if (!dock) return;
 
   const type = advPickGameType(stage);
+  // adaptive 鷹架：越生疏選項越少（2選1），越熟越多（4選1）
+  const _ms = getMem(sym.z).s;
+  const nDist = _ms <= 0 ? 1 : (_ms === 1 ? 2 : 3);
   let promptHTML = "", choicesHTML = "", correct = sym.z, comboHTML = "";
 
   if (type === "listen") {
     correct = sym.z;
-    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 2)]);
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, nDist)]);
     promptHTML = '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>';
     choicesHTML = advChoicesHTML(choices);
   } else if (type === "picture") {
     correct = sym.z;
-    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 2)]);
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, nDist)]);
     promptHTML = '<div class="qz-prompt"><span class="qz-pic">' + (sym.emo || "🔊") + '</span><br>找出「' + sym.ex + '」的注音！</div>';
     choicesHTML = advChoicesHTML(choices);
   } else if (type === "catch") {
     correct = sym.z;
-    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, 3)]);
+    const choices = shuffle([sym.z, ...advDistractors(stage, sym.z, Math.min(3, nDist + 1))]);
     promptHTML = '<div class="qz-prompt">🫧 抓住 BOBO 念的字！</div>';
     choicesHTML = advChoicesHTML(choices, "drift");
   } else if (type === "blend") {
     const medial = sym.z[0];
     correct = sym.z.slice(1);
-    const choices = shuffle([correct, ...shuffle(ALL_FINALS.filter(f => f !== correct)).slice(0, 2)]);
+    const choices = shuffle([correct, ...shuffle(ALL_FINALS.filter(f => f !== correct)).slice(0, nDist)]);
     promptHTML = '<div class="qz-prompt">幫 <b>' + medial + '</b> 找朋友，合起來念「' + sym.ex + '」</div>';
     comboHTML = '<div class="qz-combine"><span class="qz-medial">' + medial + '</span><span class="qz-plus">＋</span><span class="qz-slot" id="qzSlot">?</span></div>';
     choicesHTML = advChoicesHTML(choices);
   } else if (type === "combo") {
     correct = sym.z;
     const otherCombined = ROBOT_STAGE_META.combined.list().map(s => s.z).filter(z => z !== sym.z);
-    const choices = shuffle([sym.z, ...shuffle(otherCombined).slice(0, 2)]);
+    const choices = shuffle([sym.z, ...shuffle(otherCombined).slice(0, nDist)]);
     promptHTML = '<div class="qz-prompt">🎧 BOBO 念的是哪一個？</div>';
     choicesHTML = advChoicesHTML(choices);
   } else if (type === "medial") {
