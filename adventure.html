@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ㄅㄆㄇ大冒險 — BOBO 的注音島</title>
+<style>
+/* ============ 字型 ============ */
+@font-face {
+  font-family: "openhuninn";
+  src: url("assets/fonts/jf-openhuninn.woff2") format("woff2");
+  font-display: swap;
+}
+
+/* ============ 基礎 ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; background: #e8fbf0; }
+body { min-height: 100%; }
+body {
+  font-family: "openhuninn", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: linear-gradient(180deg, #aee3f9 0%, #d8f3ff 40%, #e8fbf0 100%);
+  color: #3b3b50;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+button { font-family: inherit; border: none; cursor: pointer; background: none; color: inherit; }
+
+#app { max-width: 560px; margin: 0 auto; min-height: 100vh; position: relative; }
+
+/* ============ 共用元件 ============ */
+.big-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 26px; font-weight: 700; color: #fff;
+  background: linear-gradient(180deg, #ffb347, #ff8c1a);
+  border-radius: 999px; padding: 16px 44px;
+  box-shadow: 0 6px 0 #d96f00, 0 10px 24px rgba(255,140,26,.35);
+  transition: transform .12s, box-shadow .12s;
+}
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #d96f00; }
+.big-btn.green { background: linear-gradient(180deg, #5fd68a, #2eb868); box-shadow: 0 6px 0 #1d8a4a, 0 10px 24px rgba(46,184,104,.35); }
+.big-btn.green:active { box-shadow: 0 2px 0 #1d8a4a; }
+.big-btn.purple { background: linear-gradient(180deg, #b08cff, #8a5cf6); box-shadow: 0 6px 0 #6437d1, 0 10px 24px rgba(138,92,246,.35); }
+.big-btn.purple:active { box-shadow: 0 2px 0 #6437d1; }
+
+.icon-btn {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(255,255,255,.92); box-shadow: 0 3px 10px rgba(60,80,120,.18);
+  font-size: 24px; display: inline-flex; align-items: center; justify-content: center;
+  transition: transform .12s;
+}
+.icon-btn:active { transform: scale(.88); }
+
+.bounce-in { animation: bounceIn .5s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes bounceIn { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.shake { animation: shake .45s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }
+
+.pop-out { animation: popOut .5s forwards; }
+@keyframes popOut { 40%{transform:scale(1.35); opacity:1} 100%{transform:scale(.1); opacity:0} }
+
+@keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(255,170,40,.7)} 70%{box-shadow:0 0 0 18px rgba(255,170,40,0)} 100%{box-shadow:0 0 0 0 rgba(255,170,40,0)} }
+@keyframes wiggle { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+/* 星星飛行 / 彩帶 */
+.fly-star { position: fixed; font-size: 30px; z-index: 999; pointer-events: none; transition: all 1s cubic-bezier(.3,-0.3,.6,1); }
+.confetti-piece { position: fixed; font-size: 28px; z-index: 998; pointer-events: none; animation: confettiFall 1.6s ease-in forwards; }
+@keyframes confettiFall { from { transform: translateY(-10px) rotate(0deg); opacity: 1; } to { transform: translateY(75vh) rotate(360deg); opacity: 0; } }
+
+/* ============ 開場 ============ */
+.intro {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; position: relative; overflow: hidden;
+}
+.intro .cloud { position: absolute; font-size: 60px; opacity: .8; animation: floaty 4s ease-in-out infinite; }
+.intro-title { font-size: 52px; line-height: 1.25; margin: 18px 0 6px; }
+.intro-title .rb { display: inline-block; animation: bob 1.8s ease-in-out infinite; }
+.intro-sub { font-size: 18px; color: #6b7a90; margin-bottom: 30px; }
+.intro-bobo { width: 170px; animation: floaty 3s ease-in-out infinite; filter: drop-shadow(0 14px 18px rgba(50,90,140,.25)); }
+
+/* ============ 地圖 ============ */
+.map-top {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; gap: 8px;
+  background: rgba(255,255,255,.75); backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(255,255,255,.9);
+}
+.star-pill {
+  display: flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700;
+  background: #fff7e0; border: 2px solid #ffd36b; border-radius: 999px; padding: 6px 16px;
+}
+.map-wrap { padding-bottom: 60px; }
+.band { position: relative; padding: 6px 0 2px; }
+.band-head {
+  display: flex; align-items: center; gap: 10px; margin: 0 16px;
+  padding: 8px 18px; border-radius: 18px; color: #fff; font-size: 21px; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(60,80,120,.16);
+}
+.band-head .be { font-size: 28px; }
+.band-head .done-tag { margin-left: auto; font-size: 15px; background: rgba(255,255,255,.25); padding: 3px 12px; border-radius: 99px; }
+.band-nodes { position: relative; height: 300px; }
+.band-nodes svg.trail { position: absolute; inset: 0; width: 100%; height: 100%; }
+.node {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  z-index: 2;
+}
+.node-btn {
+  width: 84px; height: 84px; border-radius: 50%;
+  font-size: 36px; display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 5px solid #fff;
+  box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 10px 18px rgba(60,80,120,.18);
+  transition: transform .12s; position: relative;
+}
+.node-btn:active { transform: scale(.92); }
+.node.locked .node-btn { filter: grayscale(.9); opacity: .55; }
+.node.current .node-btn { animation: pulse-ring 1.6s infinite; border-color: #ffaa28; }
+.node-label { font-size: 15px; font-weight: 700; color: #4d5a70; background: rgba(255,255,255,.85); padding: 1px 12px; border-radius: 99px; }
+.node-stars { font-size: 13px; letter-spacing: 1px; height: 16px; }
+.node .check { position: absolute; right: -4px; top: -4px; width: 28px; height: 28px; background: #2eb868; color:#fff; font-size: 16px; border-radius: 50%; display:flex; align-items:center; justify-content:center; border: 3px solid #fff; }
+.node-bobo { position: absolute; width: 64px; left: 50%; transform: translateX(-90%); bottom: 58px; animation: bob 1.6s ease-in-out infinite; pointer-events: none; z-index: 3; filter: drop-shadow(0 6px 8px rgba(50,90,140,.3)); }
+
+/* ============ 關卡場景 ============ */
+.scene { min-height: 100vh; display: flex; flex-direction: column; }
+.scene-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; z-index: 5; }
+.scene-title { font-size: 19px; font-weight: 700; background: rgba(255,255,255,.85); padding: 6px 18px; border-radius: 99px; box-shadow: 0 3px 8px rgba(60,80,120,.12); }
+.dots { display: flex; gap: 7px; justify-content: center; padding: 6px 0; }
+.dots .d { width: 13px; height: 13px; border-radius: 50%; background: rgba(255,255,255,.85); border: 2px solid rgba(120,140,170,.35); }
+.dots .d.on { background: #ffc63d; border-color: #f5a300; transform: scale(1.15); }
+
+/* --- 認識關（學習卡）--- */
+.learn-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 20px 30px; }
+.learn-card {
+  background: #fff; border-radius: 34px; padding: 30px 26px 24px; text-align: center;
+  box-shadow: 0 14px 36px rgba(70,90,130,.18); width: 100%; max-width: 400px; position: relative;
+}
+.learn-z {
+  font-size: 150px; line-height: 1.1; font-weight: 700; cursor: pointer;
+  display: inline-block; transition: transform .15s;
+}
+.learn-z:active { transform: scale(.92); }
+.learn-z.combined { font-size: 96px; }
+.learn-ex { font-size: 26px; color: #5d6b80; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.learn-ex .ee { font-size: 44px; }
+.learn-actions { display: flex; justify-content: center; gap: 18px; margin-top: 22px; }
+.learn-act {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-size: 14px; font-weight: 700; color: #5d6b80;
+}
+.learn-act .ib { width: 64px; height: 64px; border-radius: 50%; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0,0,0,.1), 0 8px 14px rgba(60,80,120,.16); transition: transform .12s; }
+.learn-act .ib:active { transform: scale(.9); }
+.learn-act .ib.listen { background: #e3f2ff; }
+.learn-act .ib.mic { background: #ffe9f0; }
+.learn-act .ib.write { background: #fff3d6; }
+.learn-next { margin-top: 26px; }
+.mic-overlay {
+  position: absolute; inset: 0; border-radius: 34px; background: rgba(255,255,255,.96);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  font-size: 24px; font-weight: 700; color: #e0508a; z-index: 5;
+}
+.mic-overlay .mic-emoji { font-size: 76px; animation: pulse-mic 1s infinite; }
+@keyframes pulse-mic { 0%,100%{transform:scale(1)} 50%{transform:scale(1.25)} }
+.mic-overlay .rec-dot {
+  width: 18px; height: 18px; border-radius: 50%; background: #ff3b30;
+  animation: pulse-mic .8s infinite;
+  box-shadow: 0 0 0 6px rgba(255,59,48,.18);
+}
+.mic-overlay .mic-sub { font-size: 16px; color: #8a97ab; font-weight: 700; }
+
+/* --- 遊戲關共用 --- */
+.game-stage {
+  flex: 1; position: relative; margin: 8px 14px 18px; border-radius: 28px; overflow: hidden;
+  background-size: cover; background-position: center bottom;
+  box-shadow: 0 14px 36px rgba(70,90,130,.2);
+  min-height: 480px;
+}
+.game-prompt {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; z-index: 10;
+  background: rgba(255,255,255,.94); border-radius: 99px; padding: 8px 20px;
+  font-size: 19px; font-weight: 700; box-shadow: 0 4px 12px rgba(60,80,120,.18);
+}
+.game-prompt button { font-size: 24px; }
+
+/* 戳泡泡 */
+.bubble {
+  position: absolute; width: 96px; height: 96px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; font-weight: 700; color: #2a5a8c;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(180,225,255,.75) 60%, rgba(120,190,240,.8));
+  border: 3px solid rgba(255,255,255,.9);
+  box-shadow: inset -6px -8px 14px rgba(60,140,200,.25), 0 8px 16px rgba(60,120,180,.25);
+  animation: floaty var(--dur,3s) ease-in-out infinite;
+  transition: transform .15s;
+}
+.bubble.combined { font-size: 30px; }
+.bubble:active { transform: scale(.93); }
+
+/* 餵 BOBO */
+.feed-bobo { position: absolute; left: 50%; transform: translateX(-50%); bottom: 130px; width: 150px; animation: bob 2s ease-in-out infinite; filter: drop-shadow(0 10px 14px rgba(50,90,140,.3)); transition: transform .2s; }
+.feed-bobo.munch { animation: wiggle .35s infinite; }
+.food-row { position: absolute; bottom: 16px; left: 0; right: 0; display: flex; justify-content: center; gap: 14px; }
+.food-card {
+  width: 104px; height: 116px; border-radius: 24px; background: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-weight: 700; box-shadow: 0 6px 0 rgba(0,0,0,.1), 0 10px 18px rgba(60,80,120,.2);
+  transition: transform .15s; position: relative; z-index: 5;
+}
+.food-card:active { transform: scale(.93); }
+.food-card .fz { font-size: 40px; color: #8a5a16; }
+.food-card .fz.combined { font-size: 27px; }
+.food-card .fe { font-size: 34px; }
+.food-card.eaten { transition: all .55s cubic-bezier(.4,-0.2,.6,1); }
+
+/* 翻牌配對 */
+.pairs-grid { position: absolute; inset: 70px 16px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: center; }
+.pcard { perspective: 600px; aspect-ratio: 3/3.4; }
+.pcard-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .4s; }
+.pcard.flipped .pcard-inner, .pcard.matched .pcard-inner { transform: rotateY(180deg); }
+.pcard-face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.1), 0 8px 16px rgba(60,80,120,.18); font-weight: 700;
+}
+.pcard-back { background: linear-gradient(160deg, #8a5cf6, #6ea8ff); font-size: 38px; color: #fff; }
+.pcard-front { background: #fff; transform: rotateY(180deg); font-size: 34px; color: #2a5a8c; }
+.pcard-front .pe { font-size: 40px; }
+.pcard-front .pw { font-size: 16px; color: #7a8aa0; }
+.pcard.matched .pcard-front { background: #e8ffe9; box-shadow: 0 0 0 4px #5fd68a, 0 8px 16px rgba(46,184,104,.3); }
+.pcard.matched { animation: matchedJump .5s; }
+@keyframes matchedJump { 30%{transform:scale(1.12)} 60%{transform:scale(.96)} 100%{transform:scale(1)} }
+
+/* --- 挑戰關 --- */
+.boss-stage { flex: 1; display: flex; flex-direction: column; padding: 4px 20px 26px; }
+.boss-bobo-row { display: flex; align-items: flex-end; justify-content: center; gap: 12px; padding: 8px 0 14px; }
+.boss-bobo { width: 110px; filter: drop-shadow(0 8px 12px rgba(50,90,140,.25)); }
+.speech {
+  background: #fff; border-radius: 22px; padding: 14px 20px; font-size: 21px; font-weight: 700;
+  box-shadow: 0 6px 16px rgba(60,80,120,.16); position: relative; display: flex; align-items: center; gap: 10px;
+}
+.speech::before { content: ""; position: absolute; left: -10px; bottom: 18px; border: 10px solid transparent; border-right-color: #fff; }
+.speech .sp-listen { font-size: 30px; animation: bob 1.4s infinite; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.choice {
+  background: #fff; border-radius: 26px; min-height: 110px;
+  font-size: 52px; font-weight: 700; color: #2a5a8c;
+  box-shadow: 0 7px 0 rgba(0,0,0,.1), 0 10px 20px rgba(60,80,120,.16);
+  transition: transform .12s, opacity .3s;
+}
+.choice.combined { font-size: 36px; }
+.choice:active { transform: scale(.95); }
+.choice.dim { opacity: .35; pointer-events: none; }
+.choice.right { background: #e8ffe9; box-shadow: 0 0 0 5px #5fd68a, 0 10px 20px rgba(46,184,104,.3); }
+.review-flag { text-align: center; font-size: 16px; color: #b06f00; background: #fff3d6; border-radius: 99px; padding: 4px 16px; margin: 0 auto 10px; width: fit-content; }
+
+/* --- 過關畫面 --- */
+.clear-overlay {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(60,40,90,.45); backdrop-filter: blur(4px); padding: 24px;
+}
+.clear-card {
+  background: linear-gradient(180deg, #fffdf5, #fff6e0); border-radius: 36px; text-align: center;
+  padding: 34px 28px 30px; width: 100%; max-width: 380px; box-shadow: 0 24px 60px rgba(40,20,80,.4);
+}
+.clear-card h2 { font-size: 34px; margin: 8px 0 4px; color: #e07b00; }
+.clear-stars { font-size: 46px; letter-spacing: 6px; margin: 8px 0; }
+.clear-stars .s { display: inline-block; animation: starIn .5s cubic-bezier(.2,1.8,.4,1) both; }
+@keyframes starIn { from { transform: scale(0) rotate(-120deg); } to { transform: scale(1) rotate(0); } }
+.sticker-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 6px; }
+.sticker-chip {
+  display: flex; flex-direction: column; align-items: center; width: 64px; padding: 7px 2px;
+  background: #fff; border-radius: 16px; border: 2.5px dashed #ffc63d;
+  animation: bounceIn .55s cubic-bezier(.2,1.6,.4,1) both;
+}
+.sticker-chip .se { font-size: 26px; }
+.sticker-chip .sz { font-size: 17px; font-weight: 700; color: #4d5a70; }
+.clear-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+/* ============ 貼紙書 ============ */
+.book-overlay { position: fixed; inset: 0; z-index: 150; background: rgba(60,40,90,.45); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; }
+.book {
+  background: #fffdf5; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+  border-radius: 30px 30px 0 0; padding: 18px 20px 40px;
+}
+.book-head { display: flex; align-items: center; justify-content: space-between; position: sticky; top: -18px; background: #fffdf5; padding: 8px 0; z-index: 2; }
+.book-head h2 { font-size: 26px; color: #e07b00; }
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 14px; }
+.badge { font-size: 15px; font-weight: 700; padding: 6px 14px; border-radius: 99px; background: #fff; border: 2px solid #ffd36b; display: flex; gap: 6px; align-items: center; }
+.badge.off { filter: grayscale(1); opacity: .45; border-style: dashed; }
+.book-band-title { font-size: 18px; font-weight: 700; margin: 14px 0 8px; display: flex; align-items: center; gap: 8px; }
+.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.sticker {
+  background: #fff; border-radius: 18px; padding: 10px 4px 8px; text-align: center;
+  box-shadow: 0 4px 10px rgba(60,80,120,.1); border: 2.5px solid #ffe2a8;
+  transition: transform .12s;
+}
+.sticker:active { transform: scale(.93); }
+.sticker .ke { font-size: 30px; display: block; }
+.sticker .kz { font-size: 22px; font-weight: 700; }
+.sticker .kw { font-size: 13px; color: #8a97ab; }
+.sticker.off { filter: grayscale(1); opacity: .4; border-style: dashed; }
+.sticker.off .ke { filter: blur(2px); }
+
+/* ============ 家長 / 設定 modal ============ */
+.modal-overlay { position: fixed; inset: 0; z-index: 150; background: rgba(60,40,90,.45); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-card { background: #fff; border-radius: 28px; padding: 24px; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; }
+.modal-card h2 { font-size: 24px; margin-bottom: 12px; }
+.modal-card h3 { font-size: 18px; margin: 16px 0 6px; color: #4d5a70; }
+.modal-card p, .modal-card li { font-size: 15.5px; line-height: 1.65; color: #5d6b80; }
+.modal-card ul { padding-left: 20px; }
+.modal-close { position: sticky; top: 0; float: right; }
+.gender-row { display: flex; gap: 12px; margin: 10px 0; }
+.gender-opt { flex: 1; font-size: 18px; font-weight: 700; padding: 14px; border-radius: 18px; background: #f2f5fa; border: 3px solid transparent; }
+.gender-opt.on { background: #fff3d6; border-color: #ffaa28; }
+.weak-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.weak-chip { font-size: 20px; font-weight: 700; background: #ffeef0; border: 2px solid #ffb3bd; border-radius: 14px; padding: 4px 14px; }
+.mastery-bar { height: 12px; border-radius: 99px; background: #eef1f6; overflow: hidden; margin: 4px 0 10px; }
+.mastery-bar .fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #5fd68a, #2eb868); }
+.danger-btn { width: 100%; margin-top: 18px; font-size: 16px; font-weight: 700; color: #d6455a; background: #ffeef0; border-radius: 16px; padding: 13px; }
+
+/* ============ 寫字 modal ============ */
+.write-card { background: #fff; border-radius: 28px; padding: 20px; width: 100%; max-width: 380px; text-align: center; }
+.write-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.write-box { position: relative; width: 300px; height: 300px; margin: 0 auto; border-radius: 20px; overflow: hidden; border: 3px solid #ffd36b; background: #fffdf5; }
+.write-box svg.guide { position: absolute; inset: 0; width: 100%; height: 100%; }
+.write-box canvas { position: absolute; inset: 0; touch-action: none; }
+.write-grid line { stroke: #f0c98f; stroke-width: 2; stroke-dasharray: 8 8; }
+.write-actions { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+.write-actions .wa { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 13px; font-weight: 700; color: #5d6b80; }
+
+@media (max-width: 420px) {
+  .learn-z { font-size: 120px; }
+  .learn-z.combined { font-size: 76px; }
+  .choice { font-size: 44px; min-height: 96px; }
+  .intro-title { font-size: 42px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="assets/strokes.js"></script>
+<script>
+// =====================================================
+// ㄅㄆㄇ大冒險 v2 — 一條冒險路線的引導式學習
+//
+// 設計理念（為 5-7 歲設計）：
+//   1. 零閱讀門檻 — 全語音引導、大圖示按鈕，不靠文字導航
+//   2. 一條路 — 沒有模式選單，只有一張地圖，永遠知道下一步
+//   3. 教 → 練 → 測 微循環 — 每座島固定三關：認識 / 遊戲 / 挑戰
+//   4. 錯了不罰 — 答錯 BOBO 再示範一次，錯的字進「複習袋」
+//   5. 間隔複習 — 複習袋的字會出現在之後的挑戰關開頭
+//   6. 收集慾 — 貼紙書 + 島嶼徽章，過關必有獎勵
+// =====================================================
+
+// ---------- 注音資料（例字對應 audio/tts 預錄 mp3） ----------
+const ZHUYIN_INFO = {
+  "ㄅ":{ex:"爸",emo:"👨"},"ㄆ":{ex:"皮",emo:"🍌"},"ㄇ":{ex:"媽",emo:"👩"},"ㄈ":{ex:"飛",emo:"✈️"},
+  "ㄉ":{ex:"弟",emo:"🧒"},"ㄊ":{ex:"兔",emo:"🐰"},"ㄋ":{ex:"牛",emo:"🐮"},"ㄌ":{ex:"鹿",emo:"🦌"},
+  "ㄍ":{ex:"哥",emo:"👦"},"ㄎ":{ex:"苦",emo:"😖"},"ㄏ":{ex:"猴",emo:"🐵"},
+  "ㄐ":{ex:"雞",emo:"🐔"},"ㄑ":{ex:"汽",emo:"🚗"},"ㄒ":{ex:"西",emo:"🍉"},
+  "ㄓ":{ex:"豬",emo:"🐷"},"ㄔ":{ex:"車",emo:"🚙"},"ㄕ":{ex:"蛇",emo:"🐍"},"ㄖ":{ex:"日",emo:"☀️"},
+  "ㄗ":{ex:"字",emo:"📝"},"ㄘ":{ex:"醋",emo:"🍶"},"ㄙ":{ex:"絲",emo:"🧵"},
+  "ㄚ":{ex:"啊",emo:"😮"},"ㄛ":{ex:"喔",emo:"😯"},"ㄜ":{ex:"鵝",emo:"🦢"},"ㄝ":{ex:"也",emo:"✏️"},
+  "ㄞ":{ex:"愛",emo:"❤️"},"ㄟ":{ex:"黑",emo:"⬛"},"ㄠ":{ex:"高",emo:"🦒"},"ㄡ":{ex:"樓",emo:"🏢"},
+  "ㄢ":{ex:"安",emo:"🛡️"},"ㄣ":{ex:"恩",emo:"🤗"},"ㄤ":{ex:"王",emo:"👑"},"ㄥ":{ex:"鷹",emo:"🦅"},"ㄦ":{ex:"兒",emo:"👶"},
+  "ㄧ":{ex:"衣",emo:"👕"},"ㄨ":{ex:"屋",emo:"🏠"},"ㄩ":{ex:"魚",emo:"🐟"},
+  "ㄧㄚ":{ex:"鴨",emo:"🦆"},"ㄧㄝ":{ex:"葉",emo:"🍂"},"ㄧㄠ":{ex:"腰",emo:"💃"},"ㄧㄡ":{ex:"油",emo:"🛢️"},
+  "ㄧㄢ":{ex:"鹽",emo:"🧂"},"ㄧㄣ":{ex:"音",emo:"🎵"},"ㄧㄤ":{ex:"羊",emo:"🐑"},"ㄧㄥ":{ex:"鷹",emo:"🦅"},
+  "ㄨㄚ":{ex:"蛙",emo:"🐸"},"ㄨㄛ":{ex:"我",emo:"👋"},"ㄨㄞ":{ex:"歪",emo:"🙃"},"ㄨㄟ":{ex:"為",emo:"🌟"},
+  "ㄨㄢ":{ex:"彎",emo:"➰"},"ㄨㄣ":{ex:"文",emo:"📚"},"ㄨㄤ":{ex:"王",emo:"👑"},"ㄨㄥ":{ex:"翁",emo:"👴"},
+  "ㄩㄝ":{ex:"月",emo:"🌙"},"ㄩㄢ":{ex:"圓",emo:"⭕"},"ㄩㄣ":{ex:"雲",emo:"☁️"},"ㄩㄥ":{ex:"用",emo:"✋"},
+};
+
+// ---------- 12 座島（依發聲學排序，不是ㄅㄆㄇㄈ表順） ----------
+const CHAPTERS = [
+  { name:"嘴巴村",   emo:"👄", color:"#ff7fa3", letters:["ㄅ","ㄆ","ㄇ","ㄈ"], game:"bubbles", bg:"assets/bg-initials.jpg", tip:"嘴唇音 — 看得到嘴巴動" },
+  { name:"舌頭鎮",   emo:"👅", color:"#ff9d4d", letters:["ㄉ","ㄊ","ㄋ","ㄌ"], game:"feed",    bg:"assets/bg-initials.jpg", tip:"舌尖音 — 舌頭頂上牙" },
+  { name:"喉嚨洞",   emo:"🕳️", color:"#a78bfa", letters:["ㄍ","ㄎ","ㄏ"],     game:"pairs",   bg:"assets/bg-initials.jpg", tip:"喉音 — 從喉嚨深處出來" },
+  { name:"微笑橋",   emo:"😁", color:"#34d399", letters:["ㄐ","ㄑ","ㄒ"],     game:"bubbles", bg:"assets/bg-initials.jpg", tip:"微笑音 — 嘴角往兩邊" },
+  { name:"翹舌山",   emo:"⛰️", color:"#f87171", letters:["ㄓ","ㄔ","ㄕ","ㄖ"], game:"feed",    bg:"assets/bg-initials.jpg", tip:"翹舌音 — 舌頭捲起來" },
+  { name:"平舌湖",   emo:"🏞️", color:"#60a5fa", letters:["ㄗ","ㄘ","ㄙ"],     game:"pairs",   bg:"assets/bg-initials.jpg", tip:"平舌音 — 舌頭平平的" },
+  { name:"張嘴島",   emo:"🏝️", color:"#fbbf24", letters:["ㄚ","ㄛ","ㄜ","ㄝ"], game:"bubbles", bg:"assets/bg-finals.jpg",   tip:"單韻母 — 嘴巴開開的" },
+  { name:"雙胞胎谷", emo:"👯", color:"#2dd4bf", letters:["ㄞ","ㄟ","ㄠ","ㄡ"], game:"feed",    bg:"assets/bg-finals.jpg",   tip:"複韻母 — 兩個音黏在一起" },
+  { name:"鼻音森林", emo:"🌲", color:"#4ade80", letters:["ㄢ","ㄣ","ㄤ","ㄥ","ㄦ"], game:"pairs", bg:"assets/bg-finals.jpg", tip:"鼻音 — 從鼻子哼出來" },
+  { name:"精靈塔",   emo:"🧚", color:"#c084fc", letters:["ㄧ","ㄨ","ㄩ"],     game:"bubbles", bg:"assets/bg-finals.jpg",   tip:"介音三精靈 — 會跟別人手牽手" },
+  { name:"彩虹橋",   emo:"🌈", color:"#fb7185", letters:["ㄧㄚ","ㄧㄝ","ㄧㄠ","ㄧㄡ","ㄧㄢ","ㄧㄣ","ㄧㄤ","ㄧㄥ"], game:"feed",  bg:"assets/bg-combined.jpg", tip:"ㄧ牽手的結合韻" },
+  { name:"星星海",   emo:"🌊", color:"#38bdf8", letters:["ㄨㄚ","ㄨㄛ","ㄨㄟ","ㄨㄢ","ㄨㄣ","ㄩㄝ","ㄩㄢ","ㄩㄣ","ㄩㄥ"], game:"pairs", bg:"assets/bg-combined.jpg", tip:"ㄨ和ㄩ牽手的結合韻" },
+];
+
+// 每座島 3 關：認識 → 遊戲 → 挑戰
+const NODE_TYPES = [
+  { type:"learn", emo:"🐣", label:"認識" },
+  { type:"play",  emo:"🎮", label:"遊戲" },
+  { type:"boss",  emo:"⭐", label:"挑戰" },
+];
+const NODES = [];
+CHAPTERS.forEach((c, ci) => NODE_TYPES.forEach(nt => NODES.push({ ...nt, ci })));
+
+// 易混組 — 出選項時優先拿來當干擾項（刻意練習）
+const CONFUSABLE = [
+  ["ㄅ","ㄆ"],["ㄉ","ㄊ"],["ㄍ","ㄎ"],["ㄐ","ㄑ"],["ㄗ","ㄘ"],["ㄓ","ㄔ"],
+  ["ㄓ","ㄗ"],["ㄔ","ㄘ"],["ㄕ","ㄙ"],["ㄋ","ㄌ"],["ㄐ","ㄓ"],["ㄑ","ㄔ"],["ㄒ","ㄕ"],
+  ["ㄛ","ㄜ"],["ㄞ","ㄟ"],["ㄠ","ㄡ"],["ㄢ","ㄣ"],["ㄤ","ㄥ"],["ㄧ","ㄩ"],
+  ["ㄧㄢ","ㄧㄤ"],["ㄧㄣ","ㄧㄥ"],["ㄨㄢ","ㄨㄤ"],["ㄨㄣ","ㄨㄥ"],["ㄩㄢ","ㄩㄣ"],
+];
+
+// ---------- 進度 ----------
+const STATE_KEY = "bpmf_adventure_v2";
+let state = loadState();
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY)) || {};
+    return {
+      cur: s.cur || 0,                    // 走到第幾關（node index）
+      stars: s.stars || {},               // nodeIdx -> 1~3
+      stickers: s.stickers || {},         // "ㄅ" -> true
+      badges: s.badges || {},             // chapterIdx -> true
+      reviewBag: s.reviewBag || [],       // 答錯待複習的注音
+      mem: s.mem || {},                   // "ㄅ" -> {c:答對數, w:答錯數}
+    };
+  } catch { return { cur:0, stars:{}, stickers:{}, badges:{}, reviewBag:[], mem:{} }; }
+}
+function saveState() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+function totalStars() { return Object.values(state.stars).reduce((a,b)=>a+b, 0); }
+function bumpMem(z, ok) {
+  const m = state.mem[z] || (state.mem[z] = { c:0, w:0 });
+  ok ? m.c++ : m.w++;
+}
+function addToReviewBag(z) { if (!state.reviewBag.includes(z)) state.reviewBag.push(z); }
+function learnedLetters() {  // 已經教過的所有注音（到目前進度）
+  const out = [];
+  const curCi = NODES[Math.min(state.cur, NODES.length-1)].ci;
+  CHAPTERS.forEach((c, ci) => { if (ci <= curCi) out.push(...c.letters); });
+  return out;
+}
+
+// ---------- 語音設定 ----------
+const SETTINGS_KEY = "zhuyin_voice_settings";
+let settings = loadSettings();
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { gender:"female", voiceURI:null }; }
+  catch { return { gender:"female", voiceURI:null }; }
+}
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+function getZhTwVoices() {
+  if (!window.speechSynthesis) return [];
+  const all = speechSynthesis.getVoices();
+  const tw = all.filter(v => v.lang === "zh-TW" || v.lang === "zh-Hant-TW");
+  if (tw.length) return tw;
+  const fb = all.filter(v => /zh[-_]Hant|TW|Taiwan/i.test(v.lang + " " + v.name));
+  if (fb.length) return fb;
+  return all.filter(v => v.lang.startsWith("zh"));
+}
+function guessGender(voice) {
+  const n = (voice.name || "") + " " + (voice.voiceURI || "");
+  const female = /Mei[\s-]?Jia|Ya[\s-]?Ling|Mei[\s-]?Chia|Sin[\s-]?Ji|Ting[\s-]?Ting|Li[\s-]?Mu|female|woman|girl|美佳|婷婷|語舒|善怡|雅琳|美|佳|玲|怡|婷|舒|慧|君|雅|女/i;
+  const male = /Hsiao[\s-]?Chien|male|man|boy|哥|男|小哥|志|偉|傑|宇|軒|翔/i;
+  if (male.test(n) && !/female/i.test(n)) return "male";
+  if (female.test(n)) return "female";
+  return null;
+}
+function pickVoice() {
+  const vs = getZhTwVoices();
+  if (!vs.length) return null;
+  if (settings.voiceURI) { const f = vs.find(v => v.voiceURI === settings.voiceURI); if (f) return f; }
+  const m = vs.find(v => guessGender(v) === settings.gender);
+  return m || vs.find(v => v.default) || vs[0];
+}
+function getPitchForGender() {
+  const v = pickVoice();
+  const g = v ? guessGender(v) : null;
+  if (settings.gender === "male") return g === "male" ? 1.05 : 0.65;
+  return 1.3;
+}
+if (typeof speechSynthesis !== "undefined") {
+  speechSynthesis.onvoiceschanged = () => {};
+  speechSynthesis.getVoices();
+}
+
+// ---------- 音檔播放引擎（教育部 wav + 預錄 TTS mp3 + 系統 TTS fallback） ----------
+const ZHUYIN_AUDIO_RANGE = [0x3105, 0x3129];
+function hasOfficialAudio(ch) {
+  if (!ch || ch.length !== 1) return false;
+  const cp = ch.charCodeAt(0);
+  return cp >= ZHUYIN_AUDIO_RANGE[0] && cp <= ZHUYIN_AUDIO_RANGE[1];
+}
+function audioUrlFor(ch) { return `audio/u${ch.charCodeAt(0).toString(16)}.wav`; }
+
+let currentAudio = null;
+function stopAllAudio() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+}
+function playOfficialSequence(chars, onDone) {
+  let i = 0;
+  function next() {
+    if (i >= chars.length) { if (onDone) onDone(); return; }
+    const ch = chars[i++];
+    const audio = new Audio(audioUrlFor(ch));
+    currentAudio = audio;
+    audio.playbackRate = 0.95;
+    audio.onended = next;
+    audio.onerror = next;
+    audio.play().catch(() => next());
+  }
+  next();
+}
+function speakTTSSegment(text, rate, onDone) {
+  const parts = text.split(/[。！？，：；、\s]+/).filter(Boolean);
+  const cleaned = parts.map(p => p.replace(/[ˊˇˋ˙]/g, "")).filter(Boolean);
+  let i = 0;
+  function next() {
+    if (i >= cleaned.length) { if (onDone) onDone(); return; }
+    const seg = cleaned[i++];
+    const url = `audio/tts/${settings.gender}/${encodeURIComponent(seg)}.mp3`;
+    const audio = new Audio(url);
+    currentAudio = audio;
+    let fellBack = false;
+    audio.onended = next;
+    audio.onerror = () => {
+      if (fellBack) return;
+      fellBack = true;
+      if (!window.speechSynthesis) { next(); return; }
+      const u = new SpeechSynthesisUtterance(seg);
+      u.lang = "zh-TW";
+      u.rate = rate;
+      u.pitch = getPitchForGender();
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.onend = next;
+      u.onerror = next;
+      speechSynthesis.speak(u);
+    };
+    audio.play().catch(() => audio.onerror());
+  }
+  next();
+}
+const COMBINED_AUDIO = new Set(["ㄧㄚ","ㄧㄛ","ㄧㄝ","ㄧㄞ","ㄧㄠ","ㄧㄡ","ㄧㄢ","ㄧㄣ","ㄧㄤ","ㄧㄥ","ㄨㄚ","ㄨㄛ","ㄨㄞ","ㄨㄟ","ㄨㄢ","ㄨㄣ","ㄨㄤ","ㄨㄥ","ㄩㄝ","ㄩㄢ","ㄩㄣ","ㄩㄥ"]);
+function combinedKey(s) { return Array.from(s).map(c => c.charCodeAt(0)).join("_"); }
+function playCombinedUnit(s, onDone) {
+  const url = "audio/combined/" + (settings.gender || "female") + "/" + combinedKey(s) + ".mp3";
+  const a = new Audio(url); currentAudio = a;
+  a.onended = onDone;
+  a.onerror = () => playOfficialSequence(Array.from(s), onDone);
+  a.play().catch(() => { if (a.onerror) a.onerror(); });
+}
+// speak("ㄅ，爸") → 官方 ㄅ 錄音 → 預錄「爸」mp3（沒有就系統 TTS）
+function speak(text, rate = 0.85, onDone) {
+  stopAllAudio();
+  if (!text) { if (onDone) onDone(); return; }
+  const segments = [];
+  let buf = "", bufType = null;
+  for (const ch of text) {
+    const t = hasOfficialAudio(ch) ? "audio" : "tts";
+    if (t !== bufType && buf) { segments.push({ type: bufType, text: buf }); buf = ""; }
+    buf += ch; bufType = t;
+  }
+  if (buf) segments.push({ type: bufType, text: buf });
+  let idx = 0;
+  function playNext() {
+    if (idx >= segments.length) { if (onDone) onDone(); return; }
+    const seg = segments[idx++];
+    if (seg.type === "audio") {
+      if (seg.text.length >= 2 && COMBINED_AUDIO.has(seg.text)) playCombinedUnit(seg.text, playNext);
+      else playOfficialSequence(seg.text.split(""), playNext);
+    } else {
+      speakTTSSegment(seg.text, rate, playNext);
+    }
+  }
+  playNext();
+}
+const CHEERS = ["好棒", "答對了", "太厲害了"];
+function cheer() { return CHEERS[Math.floor(Math.random() * CHEERS.length)]; }
+// 念注音一律「注音＋例字」（跟 v1 一樣：「ㄅ，爸」）
+// 教育部聲符 wav 是純子音，單獨播放聽起來不像在念字 — 一定要接例字
+function letterPhrase(z) {
+  const i = ZHUYIN_INFO[z];
+  return i ? `${z}，${i.ex}` : z;
+}
+
+// ---------- 音效 ----------
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+function playTone(freq, duration = 0.15, type = "triangle", volume = 0.15, delay = 0) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + duration);
+  } catch {}
+}
+function sfxRight() { playTone(523, .12); playTone(659, .12, "triangle", .15, .1); playTone(784, .2, "triangle", .15, .2); }
+function sfxWrong() { playTone(196, .25, "sawtooth", .08); }
+function sfxPop()   { playTone(880, .08, "sine", .2); playTone(1320, .1, "sine", .12, .05); }
+function sfxFanfare() { [523,659,784,1047,1319].forEach((f,i)=>playTone(f,.22,"triangle",.16,i*.13)); }
+
+// ---------- 特效 ----------
+function flyStar(x, y) {
+  const star = document.createElement("div");
+  star.className = "fly-star"; star.textContent = "⭐";
+  star.style.left = x + "px"; star.style.top = y + "px";
+  document.body.appendChild(star);
+  const pill = document.querySelector(".star-pill, .scene-title");
+  const tx = pill ? pill.getBoundingClientRect().left + 20 : 40;
+  const ty = pill ? pill.getBoundingClientRect().top + 10 : 20;
+  requestAnimationFrame(() => {
+    star.style.left = tx + "px"; star.style.top = ty + "px";
+    star.style.transform = "scale(.4)"; star.style.opacity = ".3";
+  });
+  setTimeout(() => star.remove(), 1100);
+}
+function confettiBurst(n = 24) {
+  const emojis = ["🎉","⭐","🌟","✨","🎊","💖","🍀"];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.top = (Math.random() * -20) + "vh";
+    p.style.animationDelay = (Math.random() * .5) + "s";
+    p.style.fontSize = (20 + Math.random() * 18) + "px";
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2300);
+  }
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 出干擾選項：同島優先 → 易混組 → 已學過的
+function distractorsFor(z, pool, n) {
+  const cands = new Set();
+  CONFUSABLE.forEach(g => { if (g.includes(z)) g.forEach(x => { if (x !== z) cands.add(x); }); });
+  shuffle(pool.filter(x => x !== z)).forEach(x => cands.add(x));
+  shuffle(learnedLetters().filter(x => x !== z)).forEach(x => cands.add(x));
+  shuffle(Object.keys(ZHUYIN_INFO).filter(x => x !== z && x.length === z.length)).forEach(x => cands.add(x));
+  return [...cands].filter(x => x !== z).slice(0, n);
+}
+
+// ---------- BOBO 開心動畫（sprite） ----------
+function boboHappyAnim(imgEl) {
+  if (!imgEl) return;
+  const frames = ["01","02","03","04","05","06"];
+  let i = 0;
+  const orig = imgEl.src;
+  const t = setInterval(() => {
+    if (!document.body.contains(imgEl) || i >= frames.length * 2) {
+      clearInterval(t);
+      if (document.body.contains(imgEl)) imgEl.src = orig;
+      return;
+    }
+    imgEl.src = `assets/sprite/happy/${frames[i % frames.length]}.png`;
+    i++;
+  }, 110);
+}
+function boboSad(imgEl, ms = 1100) {
+  if (!imgEl) return;
+  const orig = "assets/robot-bobo.png";
+  imgEl.src = "assets/robot-bobo-sad.png";
+  setTimeout(() => { if (document.body.contains(imgEl)) imgEl.src = orig; }, ms);
+}
+
+// =====================================================
+// 畫面
+// =====================================================
+const app = () => document.getElementById("app");
+let currentNodeIdx = null;
+
+// ---------- 開場 ----------
+function showIntro() {
+  const isNew = state.cur === 0 && totalStars() === 0;
+  const ch = CHAPTERS[NODES[Math.min(state.cur, NODES.length - 1)].ci];
+  app().innerHTML = `
+    <div class="intro">
+      <div class="cloud" style="top:8%; left:6%;">☁️</div>
+      <div class="cloud" style="top:16%; right:8%; animation-delay:1.2s;">⛅</div>
+      <div class="cloud" style="bottom:20%; left:10%; animation-delay:2s;">☁️</div>
+      <img class="intro-bobo" src="assets/robot-bobo.png" alt="BOBO">
+      <h1 class="intro-title">
+        ${["ㄅ","ㄆ","ㄇ"].map((c,i)=>`<span class="rb" style="animation-delay:${i*.18}s; color:${["#ff7fa3","#ffaa28","#2eb868"][i]}">${c}</span>`).join("")}大冒險
+      </h1>
+      <div class="intro-sub">${isNew ? "和 BOBO 一起去注音島探險！" : `上次玩到：${ch.emo} ${ch.name}`}</div>
+      <button class="big-btn green" id="startBtn">${isNew ? "🚀 開始冒險" : "🚀 繼續冒險"}</button>
+    </div>`;
+  document.getElementById("startBtn").onclick = () => {
+    getAudioCtx();   // 解鎖音訊
+    speak(isNew ? "你好，我是BOBO，我們一起去冒險吧" : "出發囉");
+    renderMap();
+  };
+}
+
+// ---------- 地圖 ----------
+function renderMap() {
+  stopAllAudio();
+  currentNodeIdx = null;
+  const xs = [[22, 58, 80], [78, 42, 20]];  // 兩種彎路交替
+  let html = `
+    <div class="map-top">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="icon-btn" onclick="location.href='index.html'" title="回首頁">⬅️</button>
+        <div class="star-pill">⭐ ${totalStars()}</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="icon-btn" onclick="openBook()" title="貼紙書">📒</button>
+        <button class="icon-btn" onclick="openParent()" title="家長">👪</button>
+        <button class="icon-btn" onclick="openSettings()" title="設定">⚙️</button>
+      </div>
+    </div>
+    <div class="map-wrap">`;
+  CHAPTERS.forEach((c, ci) => {
+    const base = ci * 3;
+    const pts = xs[ci % 2];
+    const ys = [18, 50, 84];
+    const chapterDone = state.badges[ci];
+    html += `
+      <div class="band">
+        <div class="band-head" style="background:linear-gradient(135deg, ${c.color}, ${c.color}cc);">
+          <span class="be">${c.emo}</span> ${c.name}
+          <span style="font-size:14px; opacity:.9;">${c.letters.slice(0,5).join(" ")}${c.letters.length>5?"…":""}</span>
+          ${chapterDone ? `<span class="done-tag">🏅 完成</span>` : ""}
+        </div>
+        <div class="band-nodes">
+          <svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M ${pts[0]} ${ys[0]} Q ${(pts[0]+pts[1])/2 + (ci%2? -18:18)} ${(ys[0]+ys[1])/2}, ${pts[1]} ${ys[1]} T ${pts[2]} ${ys[2]}"
+              fill="none" stroke="rgba(255,255,255,.9)" stroke-width="3.2" stroke-dasharray="0.2 6" stroke-linecap="round" vector-effect="non-scaling-stroke" style="stroke-width:5px;"/>
+          </svg>
+          ${NODE_TYPES.map((nt, k) => {
+            const idx = base + k;
+            const done = idx < state.cur;
+            const cur = idx === state.cur;
+            const locked = idx > state.cur;
+            const stars = state.stars[idx] || 0;
+            return `
+            <div class="node ${done?"done":""} ${cur?"current":""} ${locked?"locked":""}" style="left:${pts[k]}%; top:${ys[k]}%;">
+              ${cur ? `<img class="node-bobo" src="assets/robot-bobo.png" alt="">` : ""}
+              <button class="node-btn" ${locked ? "" : `onclick="startNode(${idx})"`}>
+                ${locked ? "🔒" : nt.emo}
+                ${done ? `<span class="check">✓</span>` : ""}
+              </button>
+              <div class="node-label">${nt.label}</div>
+              <div class="node-stars">${nt.type === "boss" && stars ? "⭐".repeat(stars) : ""}</div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+  });
+  html += `
+    <div style="text-align:center; padding: 26px 0 10px; font-size: 15px; color:#7a8aa0;">
+      ${state.cur >= NODES.length ? "🏆 全部島嶼都完成了！可以回去任何島再玩一次" : "點 BOBO 站的那一關繼續冒險"}
+    </div>
+  </div>`;
+  app().innerHTML = html;
+  // 捲到目前進度
+  const curNode = document.querySelector(".node.current") || document.querySelector(".band:last-child");
+  if (curNode) curNode.scrollIntoView({ block: "center", behavior: "instant" });
+}
+
+function startNode(idx) {
+  currentNodeIdx = idx;
+  const node = NODES[idx];
+  if (node.type === "learn") renderLearn(idx);
+  else if (node.type === "play") renderPlay(idx);
+  else renderBoss(idx);
+}
+
+// ---------- 場景外框 ----------
+function sceneShell(idx, inner, opts = {}) {
+  const node = NODES[idx];
+  const c = CHAPTERS[node.ci];
+  app().innerHTML = `
+    <div class="scene">
+      <div class="scene-top">
+        <button class="icon-btn" onclick="renderMap()">🏠</button>
+        <div class="scene-title">${c.emo} ${c.name} · ${node.emo} ${node.label}</div>
+        <div style="width:52px;">${opts.right || ""}</div>
+      </div>
+      ${inner}
+    </div>`;
+}
+function dotsHTML(total, done) {
+  return `<div class="dots">${Array.from({length: total}, (_,i) =>
+    `<div class="d ${i < done ? "on" : ""}"></div>`).join("")}</div>`;
+}
+
+// =====================================================
+// 認識關 — 聽、念、描，一次一個新朋友
+// =====================================================
+let learnState = null;
+function renderLearn(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  learnState = { idx, li: 0, letters: c.letters };
+  renderLearnCard(true);
+}
+function renderLearnCard(autoSpeak) {
+  const { idx, li, letters } = learnState;
+  const c = CHAPTERS[NODES[idx].ci];
+  const z = letters[li];
+  const info = ZHUYIN_INFO[z];
+  const isCombined = z.length > 1;
+  sceneShell(idx, `
+    ${dotsHTML(letters.length, li)}
+    <div class="learn-stage">
+      <div class="learn-card bounce-in" id="learnCard">
+        <div style="font-size:15px; color:#9aa7ba; margin-bottom:2px;">${c.tip}</div>
+        <div class="learn-z ${isCombined?"combined":""}" style="color:${c.color}" onclick="speak('${z}，${info.ex}')">${z}</div>
+        <div class="learn-ex"><span class="ee">${info.emo}</span> ${info.ex}</div>
+        <div class="learn-actions">
+          <div class="learn-act"><button class="ib listen" onclick="speak('${z}，${info.ex}')">🔊</button>再聽</div>
+          <div class="learn-act"><button class="ib mic" onclick="learnEcho()">🎤</button>換你念</div>
+          ${!isCombined && window.ZHUYIN_STROKES && window.ZHUYIN_STROKES[z] ?
+            `<div class="learn-act"><button class="ib write" onclick="openWriting('${z}')">✍️</button>寫寫看</div>` : ""}
+        </div>
+        <button class="big-btn green learn-next" onclick="learnNext()">下一個 ➜</button>
+      </div>
+    </div>
+  `);
+  if (autoSpeak) setTimeout(() => speak(`${z}，${info.ex}`), 350);
+}
+// 換你念（練習念法）：BOBO 示範 → 錄小孩的聲音 → 放給他聽 → 再念一次正確的對照
+// 沒有麥克風（沒權限/不支援）→ 退回提示模式：請他跟著念，停一下再稱讚
+function learnEcho() {
+  const { letters, li } = learnState;
+  const z = letters[li];
+  const card = document.getElementById("learnCard");
+  if (!card || card.querySelector(".mic-overlay")) return;   // 防連按
+  // 先要麥克風權限（趁 BOBO 示範的時候）
+  const micPromise = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder)
+    ? navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null)
+    : Promise.resolve(null);
+  speak(letterPhrase(z), 0.85, async () => {
+    if (!document.body.contains(card)) return;
+    const stream = await micPromise;
+    if (!document.body.contains(card)) { if (stream) stream.getTracks().forEach(t => t.stop()); return; }
+    if (stream) echoRecord(card, z, stream);
+    else echoNoMic(card);
+  });
+}
+// 提示模式（無麥克風 fallback）
+function echoNoMic(card) {
+  if (card.querySelector(".mic-overlay")) return;   // 示範期間連按兩下 → 只開一層
+  const ov = document.createElement("div");
+  ov.className = "mic-overlay";
+  ov.innerHTML = `<div class="mic-emoji">🎤</div><div>換你念念看！</div>`;
+  card.appendChild(ov);
+  speak("換你念念看", 0.85, () => {
+    setTimeout(() => {
+      ov.remove();
+      sfxRight();
+      speak(cheer());
+    }, 1700);
+  });
+}
+// 錄音模式：錄 2.3 秒 → 回放 → 正確發音對照 → 稱讚
+function echoRecord(card, z, stream) {
+  if (card.querySelector(".mic-overlay")) { stream.getTracks().forEach(t => t.stop()); return; }
+  const ov = document.createElement("div");
+  ov.className = "mic-overlay";
+  ov.innerHTML = `<div class="mic-emoji">🎤</div><div>換你念念看！</div>`;
+  card.appendChild(ov);
+  const cleanup = () => stream.getTracks().forEach(t => t.stop());
+  speak("換你念念看", 0.85, () => {
+    if (!document.body.contains(ov)) { cleanup(); return; }
+    let rec;
+    const chunks = [];
+    try { rec = new MediaRecorder(stream); }
+    catch { cleanup(); ov.remove(); speak(cheer()); return; }
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      cleanup();
+      if (!document.body.contains(ov)) return;
+      const blob = new Blob(chunks, { type: (chunks[0] && chunks[0].type) || "audio/webm" });
+      const url = URL.createObjectURL(blob);
+      ov.innerHTML = `<div class="mic-emoji">👂</div><div>聽聽看你念的！</div>`;
+      stopAllAudio();
+      const a = new Audio(url);
+      currentAudio = a;
+      const finish = () => {
+        URL.revokeObjectURL(url);
+        if (document.body.contains(ov)) ov.remove();
+        sfxRight();
+        speak(`${letterPhrase(z)}，${cheer()}`);   // 正確發音再對照一次 → 稱讚
+      };
+      a.onended = finish;
+      a.onerror = finish;
+      a.play().catch(finish);
+    };
+    // 錄音中：紅點 + 倒數提示
+    ov.innerHTML = `<div class="rec-dot"></div><div class="mic-emoji">🎤</div><div>大聲念出來！</div><div class="mic-sub">BOBO 在聽…</div>`;
+    rec.start();
+    setTimeout(() => { if (rec.state === "recording") rec.stop(); }, 2300);
+  });
+}
+function learnNext() {
+  if (!learnState || learnState.fin) return;   // 防小孩連按
+  learnState.li++;
+  if (learnState.li >= learnState.letters.length) {
+    learnState.fin = true;
+    finishNode(currentNodeIdx, 1);
+  } else {
+    renderLearnCard(true);
+  }
+}
+
+// =====================================================
+// 遊戲關 — 三種小遊戲輪流（戳泡泡 / 餵BOBO / 翻牌）
+// =====================================================
+function renderPlay(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  if (c.game === "bubbles") startBubbles(idx);
+  else if (c.game === "feed") startFeed(idx);
+  else startPairs(idx);
+}
+
+// --- 戳泡泡 ---
+let bubblesState = null;
+function startBubbles(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  bubblesState = { idx, queue: shuffle(c.letters), done: 0, total: c.letters.length, first: true };
+  nextBubbleRound();
+}
+function nextBubbleRound() {
+  const s = bubblesState;
+  const c = CHAPTERS[NODES[s.idx].ci];
+  if (!s.queue.length) { finishNode(s.idx, 1); return; }
+  s.lock = false;
+  s.target = s.queue[0];
+  const opts = shuffle([s.target, ...distractorsFor(s.target, c.letters, 3)]);
+  const isCombined = s.target.length > 1;
+  // 泡泡位置：2x2 鬆散網格 + 隨機偏移
+  const slots = shuffle([[18,30],[62,24],[22,58],[60,55]]);
+  sceneShell(s.idx, `
+    ${dotsHTML(s.total, s.done)}
+    <div class="game-stage" style="background-image:url('${c.bg}')">
+      <div class="game-prompt">
+        <button onclick="speak('${letterPhrase(s.target)}')">🔊</button> 戳戳看，哪一個是它的泡泡？
+      </div>
+      ${opts.map((z, i) => `
+        <button class="bubble ${isCombined?"combined":""}" id="bub${i}"
+          style="left:${slots[i][0] + (Math.random()*6-3)}%; top:${slots[i][1] + (Math.random()*6-3)}%; --dur:${(2.6 + Math.random()*1.6).toFixed(1)}s;"
+          onclick="popBubble(this, '${z}')">${z}</button>`).join("")}
+    </div>
+  `);
+  // 教育部原音領頭（跟 v1 一樣）— 引導語只在第一回合講一次
+  const prefix = s.first ? "聽聽看，" : "";
+  s.first = false;
+  setTimeout(() => speak(`${prefix}${letterPhrase(s.target)}`), 400);
+}
+function popBubble(el, z) {
+  const s = bubblesState;
+  if (s.lock) return;   // 答對後的等待動畫中，不收輸入
+  if (s.target !== z) {
+    el.classList.add("shake");
+    setTimeout(() => el.classList.remove("shake"), 500);
+    sfxWrong();
+    bumpMem(z, false); bumpMem(s.target, false);
+    addToReviewBag(s.target);
+    speak(`再聽一次，${letterPhrase(s.target)}`);
+    return;
+  }
+  s.lock = true;
+  sfxPop();
+  bumpMem(z, true);
+  const r = el.getBoundingClientRect();
+  el.classList.add("pop-out");
+  flyStar(r.left + r.width/2, r.top);
+  speak(cheer());
+  s.queue.shift(); s.done++;
+  saveState();
+  setTimeout(nextBubbleRound, 1000);
+}
+
+// --- 餵 BOBO ---
+let feedState = null;
+const FOOD_EMOJIS = ["🍪","🍎","🍌","🍓","🍇","🍰","🍩","🥕","🍙","🍬"];
+function startFeed(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  feedState = { idx, queue: shuffle(c.letters), done: 0, total: c.letters.length, first: true };
+  nextFeedRound();
+}
+function nextFeedRound() {
+  const s = feedState;
+  const c = CHAPTERS[NODES[s.idx].ci];
+  if (!s.queue.length) { finishNode(s.idx, 1); return; }
+  s.lock = false;
+  s.target = s.queue[0];
+  const opts = shuffle([s.target, ...distractorsFor(s.target, c.letters, 2)]);
+  const foods = shuffle(FOOD_EMOJIS).slice(0, 3);
+  const isCombined = s.target.length > 1;
+  sceneShell(s.idx, `
+    ${dotsHTML(s.total, s.done)}
+    <div class="game-stage" style="background-image:url('${c.bg}')">
+      <div class="game-prompt">
+        <button onclick="speak('${letterPhrase(s.target)}')">🔊</button> BOBO 肚子餓了，餵它對的餅乾！
+      </div>
+      <img class="feed-bobo" id="feedBobo" src="assets/robot-bobo.png" alt="BOBO">
+      <div class="food-row">
+        ${opts.map((z, i) => `
+          <button class="food-card" onclick="feedPick(this, '${z}')">
+            <span class="fe">${foods[i]}</span>
+            <span class="fz ${isCombined?"combined":""}">${z}</span>
+          </button>`).join("")}
+      </div>
+    </div>
+  `);
+  // 教育部原音領頭 — 「我想吃」只在第一回合講
+  const prefix = s.first ? "我想吃，" : "";
+  s.first = false;
+  setTimeout(() => speak(`${prefix}${letterPhrase(s.target)}`), 400);
+}
+function feedPick(el, z) {
+  const s = feedState;
+  if (s.lock) return;   // BOBO 吃餅乾的動畫中，不收輸入
+  const bobo = document.getElementById("feedBobo");
+  if (s.target !== z) {
+    el.classList.add("shake");
+    setTimeout(() => el.classList.remove("shake"), 500);
+    sfxWrong();
+    boboSad(bobo);
+    bumpMem(z, false); bumpMem(s.target, false);
+    addToReviewBag(s.target);
+    speak(`再聽一次，${letterPhrase(s.target)}`);
+    return;
+  }
+  s.lock = true;
+  sfxRight();
+  bumpMem(z, true);
+  // 餅乾飛進 BOBO 嘴裡
+  const br = bobo.getBoundingClientRect(), er = el.getBoundingClientRect();
+  el.classList.add("eaten");
+  el.style.transform = `translate(${br.left + br.width/2 - er.left - er.width/2}px, ${br.top + br.height/2 - er.top - er.height/2}px) scale(.15)`;
+  el.style.opacity = "0";
+  bobo.classList.add("munch");
+  boboHappyAnim(bobo);
+  flyStar(br.left + br.width/2, br.top);
+  speak(`好好吃，${cheer()}`);
+  s.queue.shift(); s.done++;
+  saveState();
+  setTimeout(nextFeedRound, 1200);
+}
+
+// --- 翻牌配對 ---
+let pairsState = null;
+function startPairs(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  // 每板 3 對（6 張卡）；把島上的字切成幾板
+  const groups = [];
+  const ls = shuffle(c.letters);
+  for (let i = 0; i < ls.length; i += 3) groups.push(ls.slice(i, i + 3));
+  if (groups.length > 1 && groups[groups.length-1].length < 2) {
+    // 最後一板只剩 1 個字 → 併進前一板變 4 對
+    const last = groups.pop();
+    groups[groups.length-1].push(...last);
+  }
+  pairsState = { idx, groups, gi: 0, flipped: [], lock: false, matched: 0 };
+  renderPairsBoard();
+}
+function renderPairsBoard() {
+  const s = pairsState;
+  const c = CHAPTERS[NODES[s.idx].ci];
+  const group = s.groups[s.gi];
+  s.matched = 0;
+  s.flipped = [];
+  s.lock = true;  // 先讓小孩看 2 秒再蓋牌
+  // 牌：每字 2 張（注音卡 + 圖卡）
+  const cards = shuffle(group.flatMap(z => [
+    { z, kind: "z", face: z },
+    { z, kind: "e", face: ZHUYIN_INFO[z].emo, word: ZHUYIN_INFO[z].ex },
+  ]));
+  s.cards = cards;
+  sceneShell(s.idx, `
+    ${dotsHTML(s.groups.length, s.gi)}
+    <div class="game-stage" style="background-image:url('${c.bg}')">
+      <div class="game-prompt"><span>🎴</span> 翻翻看，找出一樣的好朋友！</div>
+      <div class="pairs-grid" style="grid-template-columns: repeat(${cards.length > 6 ? 4 : 3}, 1fr);">
+        ${cards.map((card, i) => `
+          <div class="pcard flipped" id="pc${i}" onclick="flipCard(${i})">
+            <div class="pcard-inner">
+              <div class="pcard-face pcard-back">❓</div>
+              <div class="pcard-face pcard-front">
+                ${card.kind === "z" ? `<span style="font-size:${card.z.length>1?26:34}px">${card.face}</span>`
+                  : `<span class="pe">${card.face}</span><span class="pw">${card.word}</span>`}
+              </div>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>
+  `);
+  speak("翻翻看，找出一樣的好朋友");
+  // 偷看 2.2 秒 → 蓋牌
+  setTimeout(() => {
+    document.querySelectorAll(".pcard").forEach(el => el.classList.remove("flipped"));
+    s.lock = false;
+  }, 2200);
+}
+function flipCard(i) {
+  const s = pairsState;
+  if (s.lock) return;
+  const el = document.getElementById("pc" + i);
+  if (!el || el.classList.contains("flipped") || el.classList.contains("matched")) return;
+  const card = s.cards[i];
+  el.classList.add("flipped");
+  // 翻到哪張就念哪張 — 翻牌本身就是聽覺複習（注音卡念「ㄅ，爸」跟 v1 一樣）
+  speak(card.kind === "z" ? letterPhrase(card.z) : card.word);
+  s.flipped.push(i);
+  if (s.flipped.length < 2) return;
+  s.lock = true;
+  const [a, b] = s.flipped;
+  const ca = s.cards[a], cb = s.cards[b];
+  if (ca.z === cb.z && ca.kind !== cb.kind) {
+    // 配對成功
+    setTimeout(() => {
+      [a, b].forEach(k => {
+        const e = document.getElementById("pc" + k);
+        e.classList.remove("flipped");
+        e.classList.add("matched");
+      });
+      sfxRight();
+      bumpMem(ca.z, true);
+      const r = el.getBoundingClientRect();
+      flyStar(r.left + r.width/2, r.top);
+      speak(`${ca.z}，${ZHUYIN_INFO[ca.z].ex}，${cheer()}`);
+      s.matched++;
+      s.flipped = [];
+      s.lock = false;
+      saveState();
+      if (s.matched >= s.cards.length / 2) {
+        s.gi++;
+        setTimeout(() => {
+          if (s.gi >= s.groups.length) finishNode(s.idx, 1);
+          else renderPairsBoard();
+        }, 1300);
+      }
+    }, 500);
+  } else {
+    // 不一樣 → 蓋回去
+    setTimeout(() => {
+      [a, b].forEach(k => document.getElementById("pc" + k).classList.remove("flipped"));
+      s.flipped = [];
+      s.lock = false;
+    }, 1100);
+  }
+}
+
+// =====================================================
+// 挑戰關 — 5-7 題聽音選字，前面插入複習袋的字
+// =====================================================
+let bossState = null;
+function renderBoss(idx) {
+  const c = CHAPTERS[NODES[idx].ci];
+  // 複習題：複習袋裡「不是本島」的字，最多 2 題
+  const review = shuffle(state.reviewBag.filter(z => !c.letters.includes(z))).slice(0, 2);
+  let main = shuffle(c.letters);
+  if (main.length > 7) main = main.slice(0, 7);
+  const qs = [
+    ...review.map(z => ({ z, review: true })),
+    ...main.map(z => ({ z, review: false })),
+  ];
+  bossState = { idx, qs, qi: 0, mistakes: 0, wrongThisQ: false, first: true };
+  nextBossQ();
+}
+function nextBossQ() {
+  const s = bossState;
+  const c = CHAPTERS[NODES[s.idx].ci];
+  if (s.qi >= s.qs.length) { bossComplete(); return; }
+  const q = s.qs[s.qi];
+  s.lock = false;
+  s.wrongThisQ = false;
+  const opts = shuffle([q.z, ...distractorsFor(q.z, c.letters, 3)]);
+  sceneShell(s.idx, `
+    ${dotsHTML(s.qs.length, s.qi)}
+    <div class="boss-stage">
+      ${q.review ? `<div class="review-flag">🎒 複習時間 — 上次那個字回來囉</div>` : ""}
+      <div class="boss-bobo-row">
+        <img class="boss-bobo" id="bossBobo" src="assets/robot-bobo.png" alt="BOBO">
+        <button class="speech" onclick="speak('${letterPhrase(q.z)}')">
+          <span class="sp-listen">🔊</span> 哪一個是這個音？
+        </button>
+      </div>
+      <div class="choices">
+        ${opts.map(z => `
+          <button class="choice ${z.length>1?"combined":""}" onclick="bossPick(this, '${z}')">${z}</button>`).join("")}
+      </div>
+    </div>
+  `);
+  // 教育部原音領頭 — 「聽聽看」只在第一題講
+  const prefix = s.first ? "聽聽看，" : "";
+  s.first = false;
+  setTimeout(() => speak(`${prefix}${letterPhrase(q.z)}`), 400);
+}
+function bossPick(el, z) {
+  const s = bossState;
+  const q = s.qs[s.qi];
+  if (!q || s.lock) return;   // 答完最後一題或等待下一題時，不收輸入
+  const bobo = document.getElementById("bossBobo");
+  if (z !== q.z) {
+    // 答錯：這顆變暗、BOBO 示範一次、再選
+    el.classList.add("shake");
+    sfxWrong();
+    boboSad(bobo);
+    setTimeout(() => { el.classList.remove("shake"); el.classList.add("dim"); }, 450);
+    if (!s.wrongThisQ) { s.mistakes++; s.wrongThisQ = true; }
+    bumpMem(q.z, false);
+    addToReviewBag(q.z);
+    speak(`再聽一次，${letterPhrase(q.z)}`);
+    saveState();
+    return;
+  }
+  // 答對
+  s.lock = true;
+  el.classList.add("right");
+  sfxRight();
+  bumpMem(q.z, true);
+  boboHappyAnim(bobo);
+  const r = el.getBoundingClientRect();
+  flyStar(r.left + r.width/2, r.top);
+  // 複習題答對 → 移出複習袋
+  if (!s.wrongThisQ) state.reviewBag = state.reviewBag.filter(x => x !== q.z);
+  speak(s.wrongThisQ ? "答對了" : cheer());
+  saveState();
+  s.qi++;
+  setTimeout(nextBossQ, 1100);
+}
+function bossComplete() {
+  const s = bossState;
+  const stars = s.mistakes === 0 ? 3 : s.mistakes <= 2 ? 2 : 1;
+  finishNode(s.idx, stars);
+}
+
+// =====================================================
+// 過關 — 獎勵畫面
+// =====================================================
+// 過關畫面按鈕共用：第一下有效、連按無效
+function closeClear() {
+  const ov = document.querySelector(".clear-overlay");
+  if (!ov || ov.dataset.used) return false;
+  ov.dataset.used = "1";
+  ov.remove();
+  return true;
+}
+function finishNode(idx, stars) {
+  if (document.querySelector(".clear-overlay")) return;   // 防重複觸發
+  stopAllAudio();
+  const node = NODES[idx];
+  const c = CHAPTERS[node.ci];
+  const firstClear = idx >= state.cur;
+  state.stars[idx] = Math.max(state.stars[idx] || 0, stars);
+  if (firstClear) state.cur = idx + 1;
+  let newStickers = [];
+  if (node.type === "boss") {
+    // 過挑戰 → 整島貼紙 + 徽章
+    c.letters.forEach(z => { if (!state.stickers[z]) { state.stickers[z] = true; newStickers.push(z); } });
+    state.badges[node.ci] = true;
+  }
+  saveState();
+  sfxFanfare();
+  confettiBurst();
+  const isLast = idx === NODES.length - 1;
+  const titles = { learn: "認識完成！", play: "玩得好棒！", boss: `${c.name} 過關！` };
+  const overlay = document.createElement("div");
+  overlay.className = "clear-overlay";
+  overlay.innerHTML = `
+    <div class="clear-card bounce-in">
+      <img src="assets/robot-bobo.png" style="width:110px;" alt="BOBO">
+      <h2>${node.type === "boss" ? "🏅 " : ""}${titles[node.type]}</h2>
+      <div class="clear-stars">
+        ${node.type === "boss"
+          ? Array.from({length: 3}, (_,i) =>
+              `<span class="s" style="animation-delay:${.2 + i*.25}s">${i < stars ? "⭐" : "☆"}</span>`).join("")
+          : `<span class="s" style="animation-delay:.2s">⭐</span>`}
+      </div>
+      ${newStickers.length ? `
+        <div style="font-size:17px; color:#b06f00;">🎁 拿到新貼紙！</div>
+        <div class="sticker-row">
+          ${newStickers.map((z, i) => `
+            <div class="sticker-chip" style="animation-delay:${.4 + i*.12}s">
+              <span class="se">${ZHUYIN_INFO[z].emo}</span><span class="sz">${z}</span>
+            </div>`).join("")}
+        </div>` : ""}
+      <div class="clear-actions">
+        ${!isLast || node.type !== "boss" ?
+          `<button class="big-btn green" onclick="if(closeClear()) startNode(${Math.min(idx+1, NODES.length-1)})">下一關 ➜</button>` :
+          `<button class="big-btn green" onclick="if(closeClear()) openBook()">🏆 看我的貼紙書</button>`}
+        <button class="big-btn purple" onclick="if(closeClear()) renderMap()">🗺️ 回地圖</button>
+      </div>
+    </div>`;
+  renderMap();
+  document.body.appendChild(overlay);
+  const lines = { learn: "你學會了", play: "太厲害了", boss: "挑戰成功，拿到新貼紙" };
+  speak(node.type === "boss" ? `過關了，${lines.boss}` : lines[node.type]);
+}
+
+// =====================================================
+// 貼紙書
+// =====================================================
+function openBook() {
+  stopAllAudio();
+  const overlay = document.createElement("div");
+  overlay.className = "book-overlay";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="book">
+      <div class="book-head">
+        <h2>📒 我的貼紙書</h2>
+        <button class="icon-btn" onclick="this.closest('.book-overlay').remove()">✕</button>
+      </div>
+      <div class="badge-row">
+        ${CHAPTERS.map((c, ci) => `
+          <div class="badge ${state.badges[ci] ? "" : "off"}">${c.emo} ${c.name}</div>`).join("")}
+      </div>
+      ${CHAPTERS.map(c => `
+        <div class="book-band-title">${c.emo} ${c.name}</div>
+        <div class="sticker-grid">
+          ${c.letters.map(z => {
+            const got = state.stickers[z];
+            const info = ZHUYIN_INFO[z];
+            return `
+            <button class="sticker ${got ? "" : "off"}" ${got ? `onclick="speak('${z}，${info.ex}')"` : ""}>
+              <span class="ke">${got ? info.emo : "❓"}</span>
+              <span class="kz">${z}</span>
+              <span class="kw">${got ? info.ex : "？"}</span>
+            </button>`;
+          }).join("")}
+        </div>`).join("")}
+      <p style="text-align:center; margin-top:18px; color:#9aa7ba; font-size:14px;">點貼紙可以再聽一次發音喔</p>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// =====================================================
+// 家長角落
+// =====================================================
+function openParent() {
+  stopAllAudio();
+  const mem = state.mem;
+  const learned = learnedLetters();
+  const weak = learned.filter(z => {
+    const m = mem[z];
+    return m && m.w >= 2 && m.w >= m.c;
+  });
+  const acc = (z) => {
+    const m = mem[z];
+    if (!m || (m.c + m.w) === 0) return null;
+    return m.c / (m.c + m.w);
+  };
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal-card">
+      <button class="icon-btn modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      <h2>👪 家長角落</h2>
+      <p>進度：${Math.min(state.cur, NODES.length)} / ${NODES.length} 關 · ⭐ ${totalStars()} · 貼紙 ${Object.keys(state.stickers).length} 張</p>
+      <h3>需要多練的注音</h3>
+      ${weak.length ? `<div class="weak-chips">${weak.map(z => `<span class="weak-chip">${z}</span>`).join("")}</div>
+        <p>這些字答錯比較多次 — 遊戲會自動安排複習，不用特別逼練。</p>`
+        : `<p>目前沒有特別卡關的字 👍</p>`}
+      <h3>各島掌握度</h3>
+      ${CHAPTERS.map((c, ci) => {
+        const accs = c.letters.map(acc).filter(v => v !== null);
+        if (!accs.length) return "";
+        const avg = accs.reduce((a,b)=>a+b,0) / accs.length;
+        return `<div style="font-size:14.5px; display:flex; justify-content:space-between;"><span>${c.emo} ${c.name}</span><span>${Math.round(avg*100)}%</span></div>
+          <div class="mastery-bar"><div class="fill" style="width:${Math.round(avg*100)}%"></div></div>`;
+      }).join("") || "<p>還沒有作答紀錄</p>"}
+      <h3>不用螢幕也能玩的小練習</h3>
+      <ul>
+        <li><b>送氣偵測</b>：面紙放嘴前 — 念ㄅ不會飄、念ㄆ會飄</li>
+        <li><b>鼻音偵測</b>：捏住鼻子 — ㄇ／ㄋ念不出來，ㄅ／ㄉ沒影響</li>
+        <li><b>照鏡子</b>：舌頭翹起來是ㄓㄔㄕ、平貼下牙是ㄗㄘㄙ</li>
+      </ul>
+      <p style="margin-top:8px;">建議每天玩 1-2 關（約 5-10 分鐘）就停，隔天再來。過關獎勵用實體的（貼紙、選晚餐）比螢幕裡的星星更有效。</p>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// =====================================================
+// 設定
+// =====================================================
+function openSettings() {
+  stopAllAudio();
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal-card">
+      <button class="icon-btn modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      <h2>⚙️ 設定</h2>
+      <h3>說話的聲音</h3>
+      <div class="gender-row">
+        <button class="gender-opt ${settings.gender === "female" ? "on" : ""}" onclick="setGender('female', this)">👧 女生</button>
+        <button class="gender-opt ${settings.gender === "male" ? "on" : ""}" onclick="setGender('male', this)">👦 男生</button>
+      </div>
+      <button class="danger-btn" onclick="resetProgress()">🗑️ 清空進度，全部重新開始</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+function setGender(g, el) {
+  settings.gender = g;
+  settings.voiceURI = null;
+  saveSettings();
+  document.querySelectorAll(".gender-opt").forEach(b => b.classList.remove("on"));
+  el.classList.add("on");
+  speak("注音真好玩");
+}
+function resetProgress() {
+  if (!confirm("確定要清空所有進度和貼紙嗎？")) return;
+  localStorage.removeItem(STATE_KEY);
+  state = loadState();
+  document.querySelector(".modal-overlay")?.remove();
+  showIntro();
+}
+
+// =====================================================
+// 寫字（描紅 + 教育部筆順動畫）
+// =====================================================
+let writeState = null;
+function openWriting(z) {
+  stopAllAudio();
+  const strokes = window.ZHUYIN_STROKES && window.ZHUYIN_STROKES[z];
+  if (!strokes) return;
+  writeState = { z, strokes, demoTimer: null };
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "writeOverlay";
+  overlay.innerHTML = `
+    <div class="write-card bounce-in">
+      <div class="write-title">✍️ 寫寫看「${z}」</div>
+      <div class="write-box">
+        <svg class="guide" viewBox="0 0 2048 2048">
+          <g class="write-grid">
+            <line x1="1024" y1="60" x2="1024" y2="1988"/>
+            <line x1="60" y1="1024" x2="1988" y2="1024"/>
+          </g>
+          ${strokes.map((st, i) => `<path id="wstroke${i}" d="${st.d}" fill="#e8dcc8"/>`).join("")}
+        </svg>
+        <canvas id="writeCanvas" width="300" height="300"></canvas>
+      </div>
+      <div class="write-actions">
+        <div class="wa"><button class="icon-btn" onclick="writeDemo()">👀</button>看筆順</div>
+        <div class="wa"><button class="icon-btn" onclick="speak(letterPhrase('${z}'))">🔊</button>聽聲音</div>
+        <div class="wa"><button class="icon-btn" onclick="writeClear()">🧽</button>擦掉</div>
+        <div class="wa"><button class="icon-btn" style="background:#e8ffe9;" onclick="writeDone()">✅</button>寫好了</div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setupWriteCanvas();
+  speak(`${letterPhrase(z)}，跟著淡淡的字描描看`);
+}
+function setupWriteCanvas() {
+  const canvas = document.getElementById("writeCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.lineWidth = 16; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.strokeStyle = "#ff8c1a";
+  let drawing = false;
+  const pos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return [(p.clientX - r.left) * (canvas.width / r.width), (p.clientY - r.top) * (canvas.height / r.height)];
+  };
+  const start = (e) => { e.preventDefault(); drawing = true; const [x,y] = pos(e); ctx.beginPath(); ctx.moveTo(x,y); };
+  const move = (e) => { if (!drawing) return; e.preventDefault(); const [x,y] = pos(e); ctx.lineTo(x,y); ctx.stroke(); };
+  const end = () => { drawing = false; };
+  canvas.addEventListener("pointerdown", start);
+  canvas.addEventListener("pointermove", move);
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointerleave", end);
+}
+function writeDemo() {
+  const s = writeState;
+  if (!s) return;
+  if (s.demoTimer) clearTimeout(s.demoTimer);
+  s.strokes.forEach((_, i) => document.getElementById("wstroke" + i).setAttribute("fill", "#e8dcc8"));
+  let i = 0;
+  function step() {
+    if (!document.getElementById("writeOverlay")) return;
+    if (i > 0) document.getElementById("wstroke" + (i-1)).setAttribute("fill", "#b9c4d4");
+    if (i >= s.strokes.length) {
+      s.demoTimer = setTimeout(() => {
+        s.strokes.forEach((_, k) => document.getElementById("wstroke" + k)?.setAttribute("fill", "#e8dcc8"));
+      }, 900);
+      return;
+    }
+    document.getElementById("wstroke" + i).setAttribute("fill", "#ff8c1a");
+    playTone(600 + i * 120, .12);
+    i++;
+    s.demoTimer = setTimeout(step, 850);
+  }
+  step();
+}
+function writeClear() {
+  const canvas = document.getElementById("writeCanvas");
+  canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+}
+function writeDone() {
+  sfxRight();
+  confettiBurst(14);
+  speak(cheer());
+  setTimeout(() => document.getElementById("writeOverlay")?.remove(), 700);
+}
+
+// =====================================================
+// 啟動
+// =====================================================
+showIntro();
+</script>
+</body>
+</html>

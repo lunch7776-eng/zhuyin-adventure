@@ -1073,6 +1073,25 @@
     .robot-entry .re-title { font-size: 22px; }
     .explore-popup { min-width: 190px; padding: 14px; }
   }
+
+  /* ---- 故事動畫播放 ---- */
+  .video-overlay {
+    position: fixed; inset: 0; z-index: 800; background: #0b0b14;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .video-overlay video { width: 100%; height: 100%; object-fit: contain; }
+  .video-skip {
+    position: absolute; top: 16px; right: 16px; z-index: 2;
+    font-size: 16px; font-weight: 700; color: #fff;
+    background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.5);
+    border-radius: 999px; padding: 8px 18px; cursor: pointer;
+    font-family: inherit;
+  }
+  .video-skip:active { transform: scale(.94); }
+  .story-btn {
+    background: none; border: none; cursor: pointer; font-size: 20px;
+    width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.7);
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -1577,24 +1596,24 @@ const LEVELS = [
     badge: "Lv 1 · 嘴型",
     emoji: "👄",
     title: "嘴型偵探",
-    desc: "全部 37 個注音 — 看嘴巴怎麼動，找出對的字",
-    target: 5, // 集 5 顆星過關
+    desc: "37 個注音每個都有題 — 看嘴巴怎麼動，找出對的字",
+    target: 37, // 37 題全輪一遍
   },
   {
     id: 2,
     badge: "Lv 2 · 聽音辨字",
     emoji: "👂",
     title: "聽音找朋友",
-    desc: "點喇叭聽聲音 → 找出對的字（會混的也一起練）",
-    target: 6,
+    desc: "37 個注音每個都有題 — 聽聲音找對的字（干擾項是易混組）",
+    target: 37,
   },
   {
     id: 3,
-    badge: "Lv 3 · 結合韻",
+    badge: "Lv 3 · 拼字",
     emoji: "🧩",
     title: "拼字小工匠",
-    desc: "看圖拼注音 — 西ㄒㄧ瓜ㄍㄨㄚ、月ㄩㄝˋ亮ㄌㄧㄤˋ",
-    target: 5,
+    desc: "37 個注音每個都有題 — 看圖挖空拼注音，最後加拼詞",
+    target: 45, // 37 個注音 + 8 個看圖拼詞
   },
 ];
 const ROBOT_STAGE_ORDER = ["initials", "finals", "combined"];
@@ -2363,7 +2382,73 @@ function pickRobotChoice(el, picked) {
   }
 }
 
+// =====================================================
+// 故事動畫（assets/video/*.mp4 — BOBO 修火箭回家的故事）
+//   intro    15s 開頭：墜落注音島（首次進遊戲）
+//   clear     6s 過關慶祝（Lv1-3 過關、韻符階段完成）
+//   midpoint  8s 引擎試轉（聲符 21 個收集完成）
+//   ending   15s 火箭回家（結合韻全收集 = 全破）
+// =====================================================
+const VIDEO_SEEN_KEY = "zhuyin_video_seen";
+function videoSeen(name) {
+  try { return !!(JSON.parse(localStorage.getItem(VIDEO_SEEN_KEY) || "{}")[name]); } catch { return false; }
+}
+function markVideoSeen(name) {
+  try {
+    const s = JSON.parse(localStorage.getItem(VIDEO_SEEN_KEY) || "{}");
+    s[name] = true;
+    localStorage.setItem(VIDEO_SEEN_KEY, JSON.stringify(s));
+  } catch {}
+}
+function playStoryVideo(name, onDone) {
+  stopAllAudio();
+  const overlay = document.createElement("div");
+  overlay.className = "video-overlay";
+  overlay.innerHTML = `
+    <video src="assets/video/${name}.mp4" autoplay playsinline></video>
+    <button class="video-skip">跳過 ⏭</button>`;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    overlay.remove();
+    if (onDone) onDone();
+  };
+  const v = overlay.querySelector("video");
+  v.onended = finish;
+  v.onerror = finish;                       // 檔案不在 → 直接略過動畫
+  overlay.querySelector(".video-skip").onclick = finish;
+  document.body.appendChild(overlay);
+  v.play().catch(() => {
+    // 自動播放被擋 → 改靜音播（影片本身有遊戲外的音樂，靜音也看得懂）
+    v.muted = true;
+    v.play().catch(finish);
+  });
+}
+// 首次進遊戲：先看 BOBO 的故事（要使用者點一下才能有聲音播放）
+function maybeShowIntroStory() {
+  if (videoSeen("intro")) return;
+  if (document.querySelector(".modal, .video-overlay")) return;
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <img src="assets/robot-bobo.png" style="width:120px" alt="BOBO">
+      <h2>BOBO 的火箭壞掉了！</h2>
+      <p>BOBO 撞上注音流星雨，火箭零件掉光光。<br>幫他收集注音、修好火箭回家吧！</p>
+      <button onclick="markVideoSeen('intro'); this.closest('.modal').remove(); playStoryVideo('intro')">▶️ 看發生什麼事</button>
+      <button class="secondary" onclick="markVideoSeen('intro'); this.closest('.modal').remove()">先開始玩</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
 function showRobotStageComplete() {
+  // 故事動畫：聲符完成=引擎試轉(期中)、韻符完成=過關慶祝、結合韻完成=火箭回家(大結局)
+  const stageNow = state.robot.stage;
+  const videoName = stageNow === "initials" ? "midpoint" : stageNow === "finals" ? "clear" : "ending";
+  playStoryVideo(videoName, () => showRobotStageCompleteModal());
+}
+function showRobotStageCompleteModal() {
   celebrateBurst();
   const stage = state.robot.stage;
   const idx = ROBOT_STAGE_ORDER.indexOf(stage);
@@ -2396,6 +2481,7 @@ function renderHome() {
     <div class="topbar">
       <div class="stars">⭐ ${state.totalStars}</div>
       <div class="right-group">
+        <button class="story-btn" onclick="playStoryVideo('intro')" title="再看一次 BOBO 的故事">🎬</button>
         <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
         <button onclick="resetProgress()">重新開始</button>
       </div>
@@ -2429,11 +2515,19 @@ function renderHome() {
         </div>
       </button>
 
+      <button class="alphabet-entry" onclick="location.href='adventure.html'">
+        <div class="ae-emoji">🗺️</div>
+        <div>
+          <div class="ae-title">冒險地圖（新玩法）</div>
+          <div class="ae-desc">12 座島嶼一路闖 · 認識 → 小遊戲 → 挑戰拿貼紙</div>
+        </div>
+      </button>
+
       <div class="level-grid">
         ${LEVELS.map((lv, i) => {
           const stars = state.levels[lv.id] || 0;
           const locked = false; // 全部解鎖
-          const starDisplay = "⭐".repeat(stars) + "☆".repeat(Math.max(0, lv.target - stars));
+          const starDisplay = `⭐ ${stars} / ${lv.target}`;
           return `
             <div class="level-card ${locked ? 'locked' : ''}"
                  onclick="${locked ? '' : `startLevel(${lv.id})`}">
@@ -2457,6 +2551,7 @@ function renderHome() {
       </div>
     </div>
   `;
+  maybeShowIntroStory();
 }
 
 function resetProgress() {
@@ -2518,12 +2613,14 @@ function startLevel(id) {
 }
 
 function startLv1() {
-  lv1State = { stars: 0, target: LEVELS[0].target, questionN: 0 };
+  // 37 個注音洗牌後全部輪一遍 — 每個注音都有題目
+  lv1State = { queue: shuffle([...LV1_BANK]), idx: 0, stars: 0, total: LV1_BANK.length, firstTry: true };
   nextLv1();
 }
 function nextLv1() {
-  if (lv1State.stars >= lv1State.target) return showLevelComplete(1);
-  const correct = LV1_BANK[Math.floor(Math.random() * LV1_BANK.length)];
+  if (lv1State.idx >= lv1State.queue.length) return showLevelComplete(1, lv1State.stars, lv1State.total);
+  lv1State.firstTry = true;
+  const correct = lv1State.queue[lv1State.idx];
   const wrongs = shuffle(LV1_BANK.filter(x => x.zhuyin !== correct.zhuyin)).slice(0, 2);
   const choices = shuffle([correct, ...wrongs]);
   lv1State.correctZhuyin = correct.zhuyin;
@@ -2534,10 +2631,10 @@ function nextLv1() {
       <button onclick="renderHome()">← 回地圖</button>
       <div class="right-group">
         <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
-        <div class="stars">⭐ ${lv1State.stars} / ${lv1State.target}</div>
+        <div class="stars">⭐ ${lv1State.stars} · 第 ${lv1State.idx + 1} / ${lv1State.total} 題</div>
       </div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${lv1State.stars/lv1State.target*100}%"></div></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv1State.idx/lv1State.total*100}%"></div></div>
     <div class="game-screen">
       <div class="question-card">
         <div class="emoji-big">${correct.mouthEmoji}</div>
@@ -2562,16 +2659,17 @@ function answerLv1(el, picked, ev) {
   if (picked === correct) {
     celebrateCorrect(el);
     el.classList.add("correct");
-    lv1State.stars++;
-    state.totalStars++;
+    if (lv1State.firstTry) { lv1State.stars++; state.totalStars++; }
     flyStar(ev.clientX || 0, ev.clientY || 0);
     speak(`好棒！${correct}`);
     if (lv1State.stars > (state.levels[1] || 0)) state.levels[1] = lv1State.stars;
     saveState();
+    lv1State.idx++;
     setTimeout(nextLv1, 1200);
   } else {
     celebrateWrong(el);
     el.classList.add("wrong");
+    lv1State.firstTry = false;
     speak(`再聽一次：${correct}`, 0.7);
     setTimeout(() => el.classList.remove("wrong"), 800);
   }
@@ -2626,14 +2724,14 @@ function lv2Distractors(z) {
   return pool.slice(0, 2);
 }
 function startLv2() {
-  lv2State = { stars: 0, target: LEVELS[1].target };
+  // 37 個注音洗牌後全部輪一遍 — 每個注音都有題目
+  lv2State = { queue: shuffle([...lv2AllItems()]), idx: 0, stars: 0, total: lv2AllItems().length, firstTry: true };
   nextLv2();
 }
 function nextLv2() {
-  if (lv2State.stars >= lv2State.target) return showLevelComplete(2);
-  // 從全部 37 個注音隨機抽，干擾項用易混組
-  const items = lv2AllItems();
-  const target = items[Math.floor(Math.random() * items.length)];
+  if (lv2State.idx >= lv2State.queue.length) return showLevelComplete(2, lv2State.stars, lv2State.total);
+  lv2State.firstTry = true;
+  const target = lv2State.queue[lv2State.idx];
   const correct = target.z;
   const choices = shuffle([correct, ...lv2Distractors(correct)]);
   lv2State.correct = correct;
@@ -2645,10 +2743,10 @@ function nextLv2() {
       <button onclick="renderHome()">← 回地圖</button>
       <div class="right-group">
         <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
-        <div class="stars">⭐ ${lv2State.stars} / ${lv2State.target}</div>
+        <div class="stars">⭐ ${lv2State.stars} · 第 ${lv2State.idx + 1} / ${lv2State.total} 題</div>
       </div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${lv2State.stars/lv2State.target*100}%"></div></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv2State.idx/lv2State.total*100}%"></div></div>
     <div class="game-screen">
       <div class="question-card">
         <div class="emoji-big">👂</div>
@@ -2668,16 +2766,17 @@ function answerLv2(el, picked, ev) {
   if (picked === lv2State.correct) {
     celebrateCorrect(el);
     el.classList.add("correct");
-    lv2State.stars++;
-    state.totalStars++;
+    if (lv2State.firstTry) { lv2State.stars++; state.totalStars++; }
     flyStar(ev.clientX || 0, ev.clientY || 0);
     speak(`答對了！${lv2State.correct}`);
     if (lv2State.stars > (state.levels[2] || 0)) state.levels[2] = lv2State.stars;
     saveState();
+    lv2State.idx++;
     setTimeout(nextLv2, 1200);
   } else {
     celebrateWrong(el);
     el.classList.add("wrong");
+    lv2State.firstTry = false;
     speak(`再聽一次：${lv2State.correct}`, 0.6);
     setTimeout(() => el.classList.remove("wrong"), 800);
   }
@@ -2686,6 +2785,50 @@ function answerLv2(el, picked, ev) {
 // =====================================================
 // 關卡 3：拼字小工匠（結合韻）
 // =====================================================
+// 37 個注音的拼字題 — 每個注音一題，用注音字典的例字（挖掉目標注音）
+const LV3_LETTERS = [
+  // 聲符 21 個（挖聲符）
+  { emoji: "👨", word: "爸", chars: [{ zhuyin: "ㄅㄚˋ", blank: "ㄅ", say: "爸" }] },
+  { emoji: "🍌", word: "皮", chars: [{ zhuyin: "ㄆㄧˊ", blank: "ㄆ", say: "皮" }] },
+  { emoji: "👩", word: "媽", chars: [{ zhuyin: "ㄇㄚ", blank: "ㄇ", say: "媽" }] },
+  { emoji: "✈️", word: "飛", chars: [{ zhuyin: "ㄈㄟ", blank: "ㄈ", say: "飛" }] },
+  { emoji: "🧒", word: "弟", chars: [{ zhuyin: "ㄉㄧˋ", blank: "ㄉ", say: "弟" }] },
+  { emoji: "🐰", word: "兔", chars: [{ zhuyin: "ㄊㄨˋ", blank: "ㄊ", say: "兔" }] },
+  { emoji: "🐮", word: "牛", chars: [{ zhuyin: "ㄋㄧㄡˊ", blank: "ㄋ", say: "牛" }] },
+  { emoji: "🦌", word: "鹿", chars: [{ zhuyin: "ㄌㄨˋ", blank: "ㄌ", say: "鹿" }] },
+  { emoji: "👦", word: "哥", chars: [{ zhuyin: "ㄍㄜ", blank: "ㄍ", say: "哥" }] },
+  { emoji: "😖", word: "苦", chars: [{ zhuyin: "ㄎㄨˇ", blank: "ㄎ", say: "苦" }] },
+  { emoji: "🐵", word: "猴", chars: [{ zhuyin: "ㄏㄡˊ", blank: "ㄏ", say: "猴" }] },
+  { emoji: "🐔", word: "雞", chars: [{ zhuyin: "ㄐㄧ", blank: "ㄐ", say: "雞" }] },
+  { emoji: "🚗", word: "汽", chars: [{ zhuyin: "ㄑㄧˋ", blank: "ㄑ", say: "汽" }] },
+  { emoji: "🍉", word: "西", chars: [{ zhuyin: "ㄒㄧ", blank: "ㄒ", say: "西" }] },
+  { emoji: "🐷", word: "豬", chars: [{ zhuyin: "ㄓㄨ", blank: "ㄓ", say: "豬" }] },
+  { emoji: "🚙", word: "車", chars: [{ zhuyin: "ㄔㄜ", blank: "ㄔ", say: "車" }] },
+  { emoji: "🐍", word: "蛇", chars: [{ zhuyin: "ㄕㄜˊ", blank: "ㄕ", say: "蛇" }] },
+  { emoji: "☀️", word: "日", chars: [{ zhuyin: "ㄖˋ", blank: "ㄖ", say: "日" }] },
+  { emoji: "📝", word: "字", chars: [{ zhuyin: "ㄗˋ", blank: "ㄗ", say: "字" }] },
+  { emoji: "🍶", word: "醋", chars: [{ zhuyin: "ㄘㄨˋ", blank: "ㄘ", say: "醋" }] },
+  { emoji: "🧵", word: "絲", chars: [{ zhuyin: "ㄙ", blank: "ㄙ", say: "絲" }] },
+  // 韻符 16 個（挖韻符）
+  { emoji: "😮", word: "啊", chars: [{ zhuyin: "ㄚ", blank: "ㄚ", say: "啊" }] },
+  { emoji: "😯", word: "喔", chars: [{ zhuyin: "ㄛ", blank: "ㄛ", say: "喔" }] },
+  { emoji: "🦢", word: "鵝", chars: [{ zhuyin: "ㄜˊ", blank: "ㄜ", say: "鵝" }] },
+  { emoji: "✏️", word: "也", chars: [{ zhuyin: "ㄧㄝˇ", blank: "ㄝ", say: "也" }] },
+  { emoji: "❤️", word: "愛", chars: [{ zhuyin: "ㄞˋ", blank: "ㄞ", say: "愛" }] },
+  { emoji: "⬛", word: "黑", chars: [{ zhuyin: "ㄏㄟ", blank: "ㄟ", say: "黑" }] },
+  { emoji: "🦒", word: "高", chars: [{ zhuyin: "ㄍㄠ", blank: "ㄠ", say: "高" }] },
+  { emoji: "🏢", word: "樓", chars: [{ zhuyin: "ㄌㄡˊ", blank: "ㄡ", say: "樓" }] },
+  { emoji: "🛡️", word: "安", chars: [{ zhuyin: "ㄢ", blank: "ㄢ", say: "安" }] },
+  { emoji: "🤗", word: "恩", chars: [{ zhuyin: "ㄣ", blank: "ㄣ", say: "恩" }] },
+  { emoji: "👑", word: "王", chars: [{ zhuyin: "ㄨㄤˊ", blank: "ㄤ", say: "王" }] },
+  { emoji: "🦅", word: "鷹", chars: [{ zhuyin: "ㄧㄥ", blank: "ㄥ", say: "鷹" }] },
+  { emoji: "👶", word: "兒", chars: [{ zhuyin: "ㄦˊ", blank: "ㄦ", say: "兒" }] },
+  { emoji: "👕", word: "衣", chars: [{ zhuyin: "ㄧ", blank: "ㄧ", say: "衣" }] },
+  { emoji: "🏠", word: "屋", chars: [{ zhuyin: "ㄨ", blank: "ㄨ", say: "屋" }] },
+  { emoji: "🐟", word: "魚", chars: [{ zhuyin: "ㄩˊ", blank: "ㄩ", say: "魚" }] },
+];
+
+// 結合韻補充題（原本的看圖拼詞 — 排在 37 個注音之後）
 const LV3_BANK = [
   // { emoji, word, syllables: [zhuyin per char], blanks: [which char idx to blank, which symbol idx in that char] }
   // 簡化版：每題給一個字 + 它的全注音，但「結合韻」那一格挖空，要從選項池選對的結合韻
@@ -2731,21 +2874,42 @@ const LV3_POOL = ["ㄚ","ㄛ","ㄜ","ㄝ","ㄞ","ㄟ","ㄠ","ㄡ","ㄢ","ㄣ","�
                   "ㄩㄝ","ㄩㄢ","ㄩㄣ","ㄩㄥ"];
 
 let lv3State = null;
+// 干擾選項：跟挖空的注音「同類」才有鑑別度（聲符配聲符、韻符配韻符、結合韻配結合韻）
+function lv3Pool(blank) {
+  const initials = ZHUYIN_TABLE.initials.map(i => i.z);
+  const finals = ZHUYIN_TABLE.finals.map(i => i.z);
+  let cands;
+  if (initials.includes(blank)) {
+    cands = (CONFUSION[blank] || []).concat(shuffle(initials.filter(x => x !== blank)));
+  } else if (finals.includes(blank)) {
+    cands = shuffle(finals.filter(x => x !== blank));
+  } else {
+    cands = shuffle(LV3_POOL.filter(x => x !== blank && x.length > 1));
+  }
+  const seen = new Set(); const out = [];
+  for (const c of cands) {
+    if (c !== blank && !seen.has(c)) { seen.add(c); out.push(c); }
+    if (out.length >= 5) break;
+  }
+  return out;
+}
 function startLv3() {
-  lv3State = { stars: 0, target: LEVELS[2].target };
+  // 37 個注音各一題（洗牌）→ 最後加上原本的看圖拼詞（結合韻）
+  const letterQs = shuffle([...LV3_LETTERS]).map(q => ({ q, charIdx: 0 }));
+  const wordQs = shuffle([...LV3_BANK]).map(q => ({ q, charIdx: Math.floor(Math.random() * q.chars.length) }));
+  lv3State = { queue: [...letterQs, ...wordQs], idx: 0, stars: 0, firstTry: true };
+  lv3State.total = lv3State.queue.length;
   nextLv3();
 }
 function nextLv3() {
-  if (lv3State.stars >= lv3State.target) return showLevelComplete(3);
-  const q = LV3_BANK[Math.floor(Math.random() * LV3_BANK.length)];
-  // 隨機選一個字來拼（簡化：一次只拼一個字的韻）
-  const charIdx = Math.floor(Math.random() * q.chars.length);
+  if (lv3State.idx >= lv3State.queue.length) return showLevelComplete(3, lv3State.stars, lv3State.total);
+  lv3State.firstTry = true;
+  const { q, charIdx } = lv3State.queue[lv3State.idx];
   const target = q.chars[charIdx];
-  // 從題庫顯示完整詞，挖空目標字的結合韻
   lv3State.q = q;
   lv3State.target = target;
-  // 池選項：正確答案 + 3 個亂的
-  const wrongs = shuffle(LV3_POOL.filter(x => x !== target.blank)).slice(0, 5);
+  // 池選項：正確答案 + 5 個同類干擾
+  const wrongs = lv3Pool(target.blank);
   const poolItems = shuffle([target.blank, ...wrongs]);
 
   // 顯示詞 — 用挖空的方式
@@ -2762,10 +2926,10 @@ function nextLv3() {
       <button onclick="renderHome()">← 回地圖</button>
       <div class="right-group">
         <button class="gear-btn" onclick="openSettings()" title="聲音設定">⚙️</button>
-        <div class="stars">⭐ ${lv3State.stars} / ${LEVELS[2].target}</div>
+        <div class="stars">⭐ ${lv3State.stars} · 第 ${lv3State.idx + 1} / ${lv3State.total} 題</div>
       </div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${lv3State.stars/LEVELS[2].target*100}%"></div></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${lv3State.idx/lv3State.total*100}%"></div></div>
     <div class="game-screen">
       <div class="question-card">
         <div class="emoji-big">${q.emoji}</div>
@@ -2789,16 +2953,17 @@ function answerLv3(el, picked, ev) {
     celebrateCorrect(el);
     el.classList.add("correct");
     el.style.background = "#2ecc71";
-    lv3State.stars++;
-    state.totalStars++;
+    if (lv3State.firstTry) { lv3State.stars++; state.totalStars++; }
     flyStar(ev.clientX || 0, ev.clientY || 0);
     speak(`${lv3State.q.word}！答對了`);
     if (lv3State.stars > (state.levels[3] || 0)) state.levels[3] = lv3State.stars;
     saveState();
+    lv3State.idx++;
     setTimeout(nextLv3, 1300);
   } else {
     celebrateWrong(el);
     el.style.background = "#e74c3c";
+    lv3State.firstTry = false;
     setTimeout(() => { el.style.background = ""; }, 800);
     speak(`再聽一次：${lv3State.target.say}`, 0.6);
   }
@@ -2807,18 +2972,25 @@ function answerLv3(el, picked, ev) {
 // =====================================================
 // 過關
 // =====================================================
-function showLevelComplete(levelId) {
+function showLevelComplete(levelId, stars, total) {
+  // 過關故事動畫：寶石飛進火箭 → 再顯示成績
+  playStoryVideo("clear", () => showLevelCompleteModal(levelId, stars, total));
+}
+function showLevelCompleteModal(levelId, stars, total) {
   celebrateBurst();
   speak("太厲害了！過關了！");
   const lv = LEVELS.find(l => l.id === levelId);
   const app = document.getElementById("app");
   const modal = document.createElement("div");
   modal.className = "modal";
+  const result = (stars !== undefined && total !== undefined)
+    ? `${total} 題全部完成 — 一次就答對 ${stars} 題 ⭐`
+    : `你拿到 ${lv.target} 顆星星 ⭐`;
   modal.innerHTML = `
     <div class="modal-content">
       <div class="big-emoji">🤖✨</div>
       <h2>${lv.title} 過關！</h2>
-      <p>你拿到 ${lv.target} 顆星星 ⭐</p>
+      <p>${result}</p>
       <button onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
       <button class="secondary" onclick="this.closest('.modal').remove();startLevel(${levelId})">再玩一次</button>
     </div>
