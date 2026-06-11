@@ -1972,7 +1972,8 @@ function renderAdventure() {
     '<div class="adv-dock" id="advDock"></div>' +
     '<div class="adv-dots">' + dots + '</div>';
 
-  requestAnimationFrame(() => advBuildWorld(advTargetIndex()));
+  // setTimeout 而非 requestAnimationFrame：rAF 在背景分頁不會觸發，場景會建不出來
+  setTimeout(() => advBuildWorld(advTargetIndex()), 30);
 }
 
 function advBuildWorld(targetIdx) {
@@ -2256,8 +2257,9 @@ function zoneWeak() {  // 該區還沒精熟(s<2)的字；重玩模式 = 全部�
 
 // ---- 複習關（間隔複習答錯的）----
 function advAfterZone() {
-  if (zoneWeak().length > 0) advStartReview();
-  else showRobotStageComplete();
+  // 收集滿 = 過關，馬上放動畫 — 不在當下追加複習題（小孩看到 21/21 就該結束了）
+  // 複習移到「🔁 再玩」：重玩這關會優先考還不熟的字（startRobotExplore 的 resurface 路徑）
+  showRobotStageComplete();
 }
 
 function advStartReview() {
@@ -2281,6 +2283,9 @@ function advNextReview() {
     return;
   }
   advState.reviewCount = (advState.reviewCount || 0) + 1;
+  // 顯示複習進度，讓小孩知道還剩幾題（不會覺得沒完沒了）
+  const banner = document.querySelector(".adv-banner .azone");
+  if (banner) banner.textContent = `🔁 複習 ${advState.reviewCount} / ${advState.reviewCap}`;
   // 輪替挑選未精熟字（interleaving）
   const z = weak[advState.reviewCount % weak.length];
   const idx = advState.symbols.findIndex(s => s.z === z);
