@@ -1074,6 +1074,75 @@
     .explore-popup { min-width: 190px; padding: 14px; }
   }
 
+  /* ---- 闖關路線（首頁） ---- */
+  .rocket-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.8); border: 2px solid #ffd9a0;
+    border-radius: 18px; padding: 10px 16px; margin: 14px 0 10px;
+  }
+  .rocket-bar .rb-rocket { font-size: 26px; }
+  .rocket-bar.all-done .rb-rocket { animation: bob 1.2s ease-in-out infinite; }
+  .rb-cells { display: flex; gap: 5px; flex: 1; }
+  .rb-cell { flex: 1; height: 14px; border-radius: 6px; background: #eee4d4; border: 1.5px solid #e3d2b8; }
+  .rb-cell.on { background: linear-gradient(180deg, #ffc36b, #ff9a2e); border-color: #f08a00; box-shadow: 0 0 6px rgba(255,160,40,.55); }
+  .rb-label { font-size: 14px; font-weight: 700; color: #b06f00; white-space: nowrap; }
+  .ending-banner {
+    width: 100%; border: none; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, #ffe9b8, #ffd2e1); color: #8a4b00;
+    font-size: 16px; font-weight: 700; border-radius: 18px; padding: 13px;
+    margin-bottom: 10px; box-shadow: 0 4px 12px rgba(200,140,40,.25);
+  }
+  .path-list { display: flex; flex-direction: column; margin: 6px 0 4px; }
+  .path-node {
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    width: 100%; border: none; cursor: pointer; font-family: inherit;
+    background: rgba(255,255,255,.9); border-radius: 20px; padding: 13px 14px;
+    box-shadow: 0 4px 14px rgba(90,80,60,.1);
+    position: relative; margin-bottom: 18px;
+  }
+  /* 節點之間的連接線 → 順序感 */
+  .path-node:not(:last-child)::after {
+    content: ""; position: absolute; left: 33px; bottom: -18px;
+    width: 4px; height: 18px; background: #e3d2b8; border-radius: 2px;
+  }
+  .path-node.done:not(:last-child)::after { background: #7cc98a; }
+  .pn-num {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800; color: #fff;
+    background: #c9b89a;
+  }
+  .path-node.done .pn-num { background: #3fae58; }
+  .path-node.current .pn-num { background: #ff9a2e; animation: pulse-ring 1.6s infinite; }
+  .pn-emoji { font-size: 34px; flex-shrink: 0; }
+  .pn-body { flex: 1; min-width: 0; }
+  .pn-title { font-size: 17.5px; font-weight: 800; color: #4a4434; }
+  .pn-desc { font-size: 13.5px; color: #8a8270; margin-top: 1px; }
+  .pn-best { font-size: 12.5px; color: #b06f00; margin-top: 3px; font-weight: 700; }
+  .pn-action { flex-shrink: 0; font-size: 22px; text-align: center; }
+  .pn-bobo { width: 52px; height: 52px; object-fit: contain; animation: bob 1.6s ease-in-out infinite; }
+  .pn-replay { font-size: 12px; font-weight: 700; color: #3fae58; line-height: 1.3; display: inline-block; }
+  .path-node.current {
+    border: 2.5px solid #ffaa28;
+    background: linear-gradient(135deg, #fffaf0, #fff3dd);
+    box-shadow: 0 8px 22px rgba(255,150,30,.22);
+  }
+  .path-node.locked { opacity: .55; cursor: default; filter: grayscale(.5); }
+  .path-node.done { border: 2px solid #bfe5c6; }
+  .path-node:not(.locked):active { transform: scale(.985); }
+  @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(255,170,40,.65)} 70%{box-shadow:0 0 0 12px rgba(255,170,40,0)} 100%{box-shadow:0 0 0 0 rgba(255,170,40,0)} }
+  .free-title { font-size: 15px; font-weight: 700; color: #8a8270; margin: 18px 0 8px; }
+  .free-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .free-card {
+    border: none; cursor: pointer; font-family: inherit; text-align: center;
+    background: rgba(255,255,255,.85); border-radius: 18px; padding: 14px 10px;
+    box-shadow: 0 4px 12px rgba(90,80,60,.1);
+  }
+  .free-card:active { transform: scale(.97); }
+  .fc-emoji { font-size: 30px; }
+  .fc-title { font-size: 16px; font-weight: 800; color: #4a4434; margin-top: 4px; }
+  .fc-desc { font-size: 12.5px; color: #8a8270; margin-top: 2px; }
+
   /* ---- 故事動畫播放 ---- */
   .video-overlay {
     position: fixed; inset: 0; z-index: 800; background: #0b0b14;
@@ -1120,6 +1189,7 @@ function loadState() {
     return {
       totalStars: base.totalStars || 0,
       levels: { 1: 0, 2: 0, 3: 0, ...(base.levels || {}) },
+      levelsDone: base.levelsDone || {},   // Lv1-3 是否「完整跑完一輪」（闖關路線解鎖用）
       robot: {
         stage: (base.robot && base.robot.stage) || "initials",
         collected: {
@@ -1133,7 +1203,7 @@ function loadState() {
       writing: (base.writing) || { done: { "1": [], "2": [] } }
     };
   } catch {
-    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} }, mem: {} }, writing: { done: { "1": [], "2": [] } } };
+    return { totalStars: 0, levels: { 1: 0, 2: 0, 3: 0 }, levelsDone: {}, robot: { stage: "initials", collected: { initials: [], finals: [], combined: [] }, mastery: { initials: {}, finals: {}, combined: {} }, mem: {} }, writing: { done: { "1": [], "2": [] } } };
   }
 }
 function saveState() {
@@ -1789,10 +1859,13 @@ function startRobotExplore() {
   const collected = state.robot.collected[stage];
   advState = { stage, symbols, walking: false, boboX: 0, L: null, vpW: 0 };
   if (collected.length >= symbols.length) {
-    // 初次都學過了 → 看有沒有還沒精熟(s<2)的，有就重現複習，沒有才過關
+    // 初次都學過了 → 看有沒有還沒精熟(s<2)的，有就重現複習
     const weak = symbols.filter(s => getMem(s.z).s < 2);
-    if (weak.length === 0) return showRobotStageComplete();
-    advState.resurface = true;  // 進場景後直接複習弱項
+    if (weak.length === 0) {
+      // 重玩模式：整區再快考一輪（不重置收集進度）
+      advState.replayAll = true;
+    }
+    advState.resurface = true;  // 進場景後直接進複習
   }
   renderAdventure();
 }
@@ -2176,7 +2249,8 @@ function bumpMem(z, correct) {
   else { m.s = Math.max(0, m.s - 1); m.w++; }
   saveState();
 }
-function zoneWeak() {  // 該區還沒精熟(s<2)的字
+function zoneWeak() {  // 該區還沒精熟(s<2)的字；重玩模式 = 全部再考一輪
+  if (advState.replayAll) return advState.symbols.map(s => s.z);
   return advState.symbols.filter(s => getMem(s.z).s < 2).map(s => s.z);
 }
 
@@ -2189,7 +2263,8 @@ function advAfterZone() {
 function advStartReview() {
   advState.phase = "review";
   advState.reviewCount = 0;
-  advState.reviewCap = 14;  // 複習題數上限，避免太長
+  // 重玩模式：全部字各考一次；一般複習：上限 14 題避免太長
+  advState.reviewCap = advState.replayAll ? advState.symbols.length : 14;
   celebrateBurst();
   const banner = document.querySelector(".adv-banner .azone");
   if (banner) banner.textContent = "🔁 複習時間！";
@@ -2443,18 +2518,13 @@ function maybeShowIntroStory() {
 }
 
 function showRobotStageComplete() {
-  // 故事動畫：聲符完成=引擎試轉(期中)、韻符完成=過關慶祝、結合韻完成=火箭回家(大結局)
-  const stageNow = state.robot.stage;
-  const videoName = stageNow === "initials" ? "midpoint" : stageNow === "finals" ? "clear" : "ending";
-  playStoryVideo(videoName, () => showRobotStageCompleteModal());
+  // 過關故事動畫：照闖關路線的設定播（收集關都是寶石飛進火箭）
+  playStoryVideo(pathVideoFor("robot", state.robot.stage), () => showRobotStageCompleteModal());
 }
 function showRobotStageCompleteModal() {
   celebrateBurst();
   const stage = state.robot.stage;
-  const idx = ROBOT_STAGE_ORDER.indexOf(stage);
-  const nextStage = ROBOT_STAGE_ORDER[idx + 1] || null;
   const flair = stage === "initials" ? "😇" : stage === "finals" ? "🦸" : "👑✨";
-  if (nextStage) state.robot.stage = nextStage;
   saveState();
   speak("太厲害了！過關了！");
 
@@ -2465,12 +2535,53 @@ function showRobotStageCompleteModal() {
       <div class="robot-flair">${flair}</div>
       ${renderRobotSvg("happy")}
       <h2>${getRobotStageLabel(stage)}收集完成！</h2>
-      <p>${nextStage ? "BOBO 升級成功，準備前往下一階段！" : "全部收集完成，BOBO 變成最強機器人！"}</p>
-      ${nextStage ? `<button onclick="this.closest('.modal').remove();startRobotExplore()">下一階段</button>` : `<button onclick="this.closest('.modal').remove();renderHome()">回首頁</button>`}
-      <button class="secondary" onclick="this.closest('.modal').remove();renderHome()">回地圖</button>
+      <p>火箭又修好一格，回地圖看下一關！</p>
+      <button onclick="this.closest('.modal').remove();renderHome()">🗺️ 回關卡地圖</button>
+      <button class="secondary" onclick="this.closest('.modal').remove();startRobotExplore()">🔁 再玩一次</button>
     </div>
   `;
   document.body.appendChild(modal);
+}
+
+// =====================================================
+// 闖關路線 — 一條順序路 6 關，照學習邏輯排：
+//   認識聲符 → 認識韻符 → 嘴型分辨 → 聽辨 → 結合韻 → 拼字總考
+// 每過一關播故事動畫（第3關=期中引擎試轉、第6關=大結局火箭回家）
+// 打過的關隨時可重玩：收集關=整區快考一輪、題目關=重跑全部題
+// =====================================================
+const PATH = [
+  { emoji: "🤖", title: "認識聲符",   desc: "跟 BOBO 收集 21 個聲符",  type: "robot", stage: "initials", video: "clear" },
+  { emoji: "🎵", title: "認識韻符",   desc: "收集 16 個韻符",          type: "robot", stage: "finals",   video: "clear" },
+  { emoji: "👄", title: "嘴型偵探",   desc: "看嘴巴怎麼動 · 37 題",    type: "level", level: 1,          video: "midpoint" },
+  { emoji: "👂", title: "聽音找朋友", desc: "聽聲音找字 · 37 題",      type: "level", level: 2,          video: "clear" },
+  { emoji: "🌈", title: "結合韻大集合", desc: "收集 21 個結合韻",      type: "robot", stage: "combined", video: "clear" },
+  { emoji: "🧩", title: "拼字小工匠", desc: "看圖拼注音 · 45 題",      type: "level", level: 3,          video: "ending" },
+];
+function pathNodeDone(node) {
+  if (node.type === "robot") {
+    const set = ROBOT_STAGE_META[node.stage].list();
+    return (state.robot.collected[node.stage] || []).length >= set.length;
+  }
+  return !!state.levelsDone[node.level];
+}
+function currentPathIdx() {           // 第一個還沒完成的關；全完成回傳 PATH.length
+  const i = PATH.findIndex(n => !pathNodeDone(n));
+  return i === -1 ? PATH.length : i;
+}
+function pathVideoFor(type, key) {    // 過關時要播哪支故事動畫
+  const node = PATH.find(n => n.type === type && (type === "robot" ? n.stage === key : n.level === key));
+  return node ? node.video : "clear";
+}
+function startPathNode(i) {
+  if (i > currentPathIdx()) return;   // 還鎖著
+  const node = PATH[i];
+  if (node.type === "robot") {
+    state.robot.stage = node.stage;
+    saveState();
+    startRobotExplore();
+  } else {
+    startLevel(node.level);
+  }
 }
 
 function renderHome() {
@@ -2488,57 +2599,68 @@ function renderHome() {
     </div>
     <div class="home">
       <h1>注音大冒險</h1>
-      <div class="subtitle">BOBO 語音探索與闖關 · 小孩好上手，大人也會喜歡的質感學習</div>
+      <div class="subtitle">幫 BOBO 收集注音、修好火箭回家！一關一關照順序闖</div>
 
-      <button class="robot-entry" onclick="startRobotAdventure()">
-        <div class="re-emoji"><img src="${ROBOT_IDLE_SRC}" alt="BOBO" style="width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(18,22,35,.22))"></div>
-        <div style="flex:1">
-          <div class="re-title">BOBO 機器人冒險</div>
-          <div class="re-desc">目前在收集：${getRobotStageLabel(rp.stage)} (${rp.done} / ${rp.total})</div>
-          <div class="re-progress"><div class="re-progress-fill" style="width:${percent}%"></div></div>
+      ${(() => {
+        const curIdx = currentPathIdx();
+        const doneCount = PATH.filter(pathNodeDone).length;
+        const allDone = doneCount >= PATH.length;
+        return `
+      <div class="rocket-bar ${allDone ? "all-done" : ""}">
+        <span class="rb-rocket">🚀</span>
+        <div class="rb-cells">
+          ${PATH.map((n, i) => `<div class="rb-cell ${pathNodeDone(n) ? "on" : ""}"></div>`).join("")}
         </div>
-      </button>
+        <span class="rb-label">${allDone ? "火箭修好了！" : `修好 ${doneCount} / ${PATH.length}`}</span>
+      </div>
+      ${allDone ? `
+      <button class="ending-banner" onclick="playStoryVideo('ending')">
+        🏆 全部破關！BOBO 回家了 — 點我再看一次大結局 🎬
+      </button>` : ""}
 
-      <button class="alphabet-entry" onclick="renderAlphabet()">
-        <div class="ae-emoji">🔎</div>
-        <div>
-          <div class="ae-title">注音字典</div>
-          <div class="ae-desc">59 個注音自由探索 · 點任一格聽發音與例字</div>
-        </div>
-      </button>
-
-      <button class="write-entry" onclick="renderWritingLevels()">
-        <div class="ae-emoji">✍️</div>
-        <div>
-          <div class="ae-title">寫字練習</div>
-          <div class="ae-desc">第一關跟著筆順描 → 第二關自己默寫 · 教育部官方筆順</div>
-        </div>
-      </button>
-
-      <button class="alphabet-entry" onclick="location.href='adventure.html'">
-        <div class="ae-emoji">🗺️</div>
-        <div>
-          <div class="ae-title">冒險地圖（新玩法）</div>
-          <div class="ae-desc">12 座島嶼一路闖 · 認識 → 小遊戲 → 挑戰拿貼紙</div>
-        </div>
-      </button>
-
-      <div class="level-grid">
-        ${LEVELS.map((lv, i) => {
-          const stars = state.levels[lv.id] || 0;
-          const locked = false; // 全部解鎖
-          const starDisplay = `⭐ ${stars} / ${lv.target}`;
+      <div class="path-list">
+        ${PATH.map((n, i) => {
+          const done = pathNodeDone(n);
+          const cur = i === curIdx;
+          const locked = i > curIdx;
+          let best = "";
+          if (n.type === "level") {
+            const lv = LEVELS.find(l => l.id === n.level);
+            best = `⭐ ${state.levels[n.level] || 0} / ${lv.target}`;
+          } else {
+            const set = ROBOT_STAGE_META[n.stage].list();
+            best = `收集 ${(state.robot.collected[n.stage] || []).length} / ${set.length}`;
+          }
           return `
-            <div class="level-card ${locked ? 'locked' : ''}"
-                 onclick="${locked ? '' : `startLevel(${lv.id})`}">
-              <div class="badge">${lv.badge}</div>
-              <div class="emoji">${lv.emoji}</div>
-              <h3>${lv.title}</h3>
-              <p>${lv.desc}</p>
-              <div class="progress-stars">${starDisplay}</div>
-            </div>
-          `;
+        <button class="path-node ${done ? "done" : ""} ${cur ? "current" : ""} ${locked ? "locked" : ""}"
+                ${locked ? "disabled" : `onclick="startPathNode(${i})"`}>
+          <div class="pn-num">${done ? "✓" : i + 1}</div>
+          <div class="pn-emoji">${n.emoji}</div>
+          <div class="pn-body">
+            <div class="pn-title">第 ${i + 1} 關 · ${n.title}</div>
+            <div class="pn-desc">${n.desc}</div>
+            <div class="pn-best">${locked ? "先完成上一關" : best}</div>
+          </div>
+          <div class="pn-action">
+            ${locked ? "🔒" : cur ? `<img src="${ROBOT_IDLE_SRC}" alt="BOBO" class="pn-bobo">` : `<span class="pn-replay">🔁<br>再玩</span>`}
+          </div>
+        </button>`;
         }).join("")}
+      </div>`;
+      })()}
+
+      <div class="free-title">🧸 自由探索（不算關卡，隨時玩）</div>
+      <div class="free-grid">
+        <button class="free-card" onclick="renderAlphabet()">
+          <div class="fc-emoji">🔎</div>
+          <div class="fc-title">注音字典</div>
+          <div class="fc-desc">59 個注音點了就唸</div>
+        </button>
+        <button class="free-card" onclick="renderWritingLevels()">
+          <div class="fc-emoji">✍️</div>
+          <div class="fc-title">寫字練習</div>
+          <div class="fc-desc">教育部筆順描寫</div>
+        </button>
       </div>
       <div class="parent-note">
         <strong>給家長：</strong>關卡依「發聲學難度」排序 — 雙唇音最容易（嘴型看得到）→ 聽辨易混組 → 結合韻拼讀。
@@ -2973,8 +3095,11 @@ function answerLv3(el, picked, ev) {
 // 過關
 // =====================================================
 function showLevelComplete(levelId, stars, total) {
-  // 過關故事動畫：寶石飛進火箭 → 再顯示成績
-  playStoryVideo("clear", () => showLevelCompleteModal(levelId, stars, total));
+  // 完整跑完一輪 → 闖關路線記完成（解鎖下一關）
+  state.levelsDone[levelId] = true;
+  saveState();
+  // 過關故事動畫：Lv1=期中引擎試轉、Lv3=大結局火箭回家、其他=寶石飛進火箭
+  playStoryVideo(pathVideoFor("level", levelId), () => showLevelCompleteModal(levelId, stars, total));
 }
 function showLevelCompleteModal(levelId, stars, total) {
   celebrateBurst();
